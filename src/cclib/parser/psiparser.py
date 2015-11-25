@@ -76,6 +76,10 @@ class Psi(logfileparser.Logfile):
         # a line that <== looks like this ==>, to whatever is in between.
         if (line.strip()[:3] == "==>") and (line.strip()[-3:] == "<=="):
             self.section = line.strip()[4:-4]
+            if self.section == "DFT Potential":
+                self.theory = "DFT"
+            else:
+                self.theory = "HF"
 
         # Psi3 print the coordinates in several configurations, and we will parse the
         # the canonical coordinates system in Angstroms as the first coordinate set,
@@ -148,6 +152,7 @@ class Psi(logfileparser.Logfile):
                 line = next(inputfile)
 
             self.set_attribute('atomnos', [self.table.number[el] for el in elements])
+            self.natom = len(elements)
 
             if not hasattr(self, 'atomcoords'):
                 self.atomcoords = []
@@ -276,6 +281,7 @@ class Psi(logfileparser.Logfile):
         if self.section == "Primary Basis" :
             if line[2:12] == "Basis Set:" :
                 self.basisname = line.split()[2]
+
 
         if (self.section == "Primary Basis" or self.section == "DFT Potential") and line.strip() == "-Contraction Scheme:":
 
@@ -550,7 +556,7 @@ class Psi(logfileparser.Logfile):
         # Both Psi3 and Psi4 print the final SCF energy right after the orbital energies,
         # but the label is different. Psi4 also does DFT, and the label is also different in that case.
         if (self.version == 3 and "* SCF total energy" in line) or \
-           (self.section == "Post-Iterations" and ("@RHF Final Energy:" in line or "@RKS Final Energy" in line)):
+           (self.section == "Post-Iterations" and ("@DF-RHF Final Energy:" in line or "@DF-RKS Final Energy" in line)):
             e = float(line.split()[-1])
             if not hasattr(self, 'scfenergies'):
                 self.scfenergies = []
@@ -642,14 +648,31 @@ class Psi(logfileparser.Logfile):
 
         mp_trigger = "MP2 Total Energy (a.u.)"
         if line.strip()[:len(mp_trigger)] == mp_trigger:
+            self.theory = "MP2"
             mpenergy = utils.convertor(float(line.split()[-1]), 'hartree', 'eV')
             if not hasattr(self, 'mpenergies'):
                 self.mpenergies = []
             self.mpenergies.append([mpenergy])
 
+        if "DF-MP2 Energies" in line:
+            self.theory = "MP2"
+            line = next(inputfile)
+            line = next(inputfile)
+            line = next(inputfile)
+            line = next(inputfile)
+            line = next(inputfile)
+            line = next(inputfile)
+            line = next(inputfile)
+            mpenergy = utils.convertor(float(line.split()[3]), 'hartree', 'eV')
+            if not hasattr(self, 'mpenergies'):
+                self.mpenergies = []
+            self.mpenergies.append([mpenergy])
+
+
         # Note this is just a start and needs to be modified for CCSD(T), etc.
         ccsd_trigger = "* CCSD total energy"
         if line.strip()[:len(ccsd_trigger)] == ccsd_trigger:
+            self.theory = "CCSD"
             ccsd_energy = utils.convertor(float(line.split()[-1]), 'hartree', 'eV')
             if not hasattr(self, "ccenergis"):
                 self.ccenergies = []

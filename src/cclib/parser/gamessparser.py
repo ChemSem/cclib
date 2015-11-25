@@ -78,7 +78,7 @@ class GAMESS(logfileparser.Logfile):
 
 #theory level
         if line[1:7] == "SCFTYP":
-            self.theory = line.split()[0][6:]
+            self.theory = line.split()[0][8:]
         if line[1:7] == "MPLEVL":
             self.theory = "MP"+line.split()[1]
         if line[1:7] == "DFTTYP" and line[8:12] != "NONE":
