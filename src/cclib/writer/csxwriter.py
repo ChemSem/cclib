@@ -46,6 +46,7 @@ class CSX(filewriter.Writer):
         hasOrb = True if (hasattr(data, 'mocoeffs')) else False
         hasFreq = True if (hasattr(data, 'vibfreqs')) else False
         hasProp = True if (hasattr(data, 'moments')) else False
+        hasElec = True if (hasattr(data, 'etoscs')) else False
         if molMulti == 1 :
             molSpin = 'RHF'
             wfnRestricted = True
@@ -55,21 +56,21 @@ class CSX(filewriter.Writer):
         molEE = data.scfenergies[0]
         #Wavefunction
         if hasOrb:
-            orbEne = data.moenergies
-            orbEString = ' '.join(str(x) for x in orbEne[0])
-            orbNum = data.nmo
-            orbOcc = []
-            orbSym = data.mosyms
-            orbSymString = ' '.join( x for x in orbSym[0])
-            for iorb in range (orbNum):
-                elecNum = 2 if iorb < int(data.homos) else 0
-                orbOcc.append(elecNum)
-            orbOccString = ' '.join(str(x) for x in sorted(orbOcc,reverse=True))
             if wfnRestricted :
+                orbEne = data.moenergies
+                orbEString = ' '.join(str(x) for x in orbEne[0])
+                orbNum = data.nmo
+                orbOcc = []
+                orbSym = data.mosyms
+                orbSymString = ' '.join( x for x in orbSym[0])
+                for iorb in range (orbNum):
+                    elecNum = 2 if iorb < int(data.homos) else 0
+                    orbOcc.append(elecNum)
+                orbOccString = ' '.join(str(x) for x in sorted(orbOcc,reverse=True))
                 wfn1 = api.waveFunctionType(orbitalCount=orbNum, \
                         orbitalSymmetry=orbSymString, \
                         orbitalOccupancies=orbOccString)
-                orbe1 = api.stringArrayType(unit='cs:hartree')
+                orbe1 = api.stringArrayType(unit='cs:eV')
                 orbe1.set_valueOf_(orbEString)
                 orbs1 = api.orbitalsType()
                 for orbArray in data.mocoeffs:
@@ -80,6 +81,52 @@ class CSX(filewriter.Writer):
                         orbs1.add_orbital(orb1)
                 wfn1.set_orbitals(orbs1)
                 wfn1.set_orbitalEnergies(orbe1)
+            else:
+                orbNum = data.nmo
+                orbCaEne = data.moenergies[0][:]
+                orbCaEString = ' '.join(str(x) for x in orbCaEne)
+                orbCbEne = data.moenergies[1][:]
+                orbCbEString = ' '.join(str(x) for x in orbCbEne)
+                orbCaOcc = []
+                orbCbOcc = []
+                for iorb in range (orbNum):
+                    elecCa = 1 if orbCaEne[iorb] < 0.0 else 0
+                    orbCaOcc.append(elecCa)
+                    elecCb = 1 if orbCbEne[iorb] < 0.0 else 0
+                    orbCbOcc.append(elecCb)
+                orbCaOccString = ' '.join(str(x) for x in sorted(orbCaOcc,reverse=True))
+                orbCbOccString = ' '.join(str(x) for x in sorted(orbCbOcc,reverse=True))
+                orbCaSym = data.mosyms[0][:]
+                orbCaSymString = ' '.join( x for x in orbCaSym)
+                orbCbSym = data.mosyms[1][:]
+                orbCbSymString = ' '.join( x for x in orbCbSym)
+                wfn1 = api.waveFunctionType(orbitalCount=orbNum)
+                orbe1 = api.stringArrayType(unit='cs:eV')
+                orbe1.set_valueOf_(orbCaEString)
+                orbs1 = api.orbitalsType()
+                alphaOrb = data.mocoeffs[0][:]
+                for iorb in range(orbNum):
+                    orbCaString = ' '.join(str(x) for x in alphaOrb[iorb])
+                    orb1 = api.stringArrayType(id=iorb+1)
+                    orb1.set_valueOf_(orbCaString)
+                    orbs1.add_orbital(orb1)
+                wfn1.set_alphaOrbitals(orbs1)
+                wfn1.set_alphaOrbitalEnergies(orbe1)
+                wfn1.set_alphaOrbitalOccupancies(orbCaOccString)
+                wfn1.set_alphaOrbitalSymmetry(orbCaSymString)
+                orbe2 = api.stringArrayType(unit='cs:eV')
+                orbe2.set_valueOf_(orbCbEString)
+                orbs2 = api.orbitalsType()
+                betaOrb = data.mocoeffs[1][:]
+                for iorb in range(orbNum):
+                    orbCbString = ' '.join(str(x) for x in betaOrb[iorb])
+                    orb2 = api.stringArrayType(id=iorb+1)
+                    orb2.set_valueOf_(orbCbString)
+                    orbs2.add_orbital(orb2)
+                wfn1.set_betaOrbitals(orbs2)
+                wfn1.set_betaOrbitalEnergies(orbe2)
+                wfn1.set_betaOrbitalOccupancies(orbCbOccString)
+                wfn1.set_betaOrbitalSymmetry(orbCbSymString)
 
         #vibrational frequency
         if hasFreq:
@@ -127,6 +174,18 @@ class CSX(filewriter.Writer):
             prop1.add_systemProperty(sprop3)
             prop1.add_systemProperty(sprop4)
 
+        #Electronic transition information
+        if hasElec:
+            transStr = ' '.join(str(x) for x in data.etenergies)
+            oscilStr = ' '.join(str(x) for x in data.etoscs)
+            elec1 = api.elecSpectraType()
+            trans1 = api.stringArrayType(unit="cs:cm-1")
+            trans1.set_valueOf_(transStr)
+            oscil1 = api.stringArrayType()
+            oscil1.set_valueOf_(oscilStr)
+            elec1.set_electronicTransitions(trans1)
+            elec1.set_oscillatorStrength(oscil1)
+
         #Start to generate CSX elements
         cs1 = api.csType(version='1.0')
 
@@ -155,6 +214,7 @@ class CSX(filewriter.Writer):
         temp1.set_valueOf_(0.0)
         ms1.set_systemTemperature(temp1)
         mol1 = api.moleculeType(id='m1',atomCount=atomNum)
+        atmCharge = data.atomcharges["mulliken"]
         #obmol1 = openbabel.OBMol()
         for iatm in range(atomNum):
             #   xCoord = float(data.atomcoords[iatm,0])
@@ -174,7 +234,7 @@ class CSX(filewriter.Writer):
                     yCoord3D=yCoord1, \
                     zCoord3D=zCoord1, \
                     basisSet='cs:'+basisName, \
-                    calculatedAtomCharge=0, \
+                    calculatedAtomCharge=atmCharge[iatm], \
                     formalAtomCharge=0)
             mol1.add_atom(atm)
         ms1.add_molecule(mol1)
@@ -203,6 +263,8 @@ class CSX(filewriter.Writer):
                     scf1.set_properties(prop1)
                 if hasFreq:
                     scf1.set_vibrationalAnalysis(vib1)
+                if hasElec:
+                    scf1.set_eletronicSpectra(elec1)
                 sdm1.set_abinitioScf(scf1)
             #DFT
             elif (calcType == 'DFT'):
@@ -219,6 +281,8 @@ class CSX(filewriter.Writer):
                     dft1.set_properties(prop1)
                 if hasFreq:
                     dft1.set_vibrationalAnalysis(vib1)
+                if hasElec:
+                    scf1.set_eletronicSpectra(elec1)
                 sdm1.set_dft(dft1)
             #MP2
             elif (calcType == 'MP2'):

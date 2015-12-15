@@ -459,7 +459,8 @@ class Psi(logfileparser.Logfile):
 
             self.skip_line(inputfile, 'blank')
             header = next(inputfile)
-            assert header.strip() == "Total Energy        Delta E     RMS |[F,P]|"
+            assert (header.strip() == "Total Energy        Delta E     RMS |[F,P]|" \
+               or   header.strip() == "Total Energy        Delta E     Density RMS")
 
             scfvals = []
             self.skip_line(inputfile, 'blank')
@@ -755,6 +756,8 @@ class Psi(logfileparser.Logfile):
             self.reference = numpy.array([float(x.strip(',')) for x in line.split()[-4:-1]])
             assert line.split()[-1] == "Bohr"
             self.reference = utils.convertor(self.reference, 'bohr', 'Angstrom')
+        else:
+            self.reference = [0.0]*3
 
         # The properties section print the molecular dipole moment:
         #

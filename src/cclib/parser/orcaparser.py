@@ -28,6 +28,7 @@ class ORCA(logfileparser.Logfile):
 
         # Call the __init__ method of the superclass
         super(ORCA, self).__init__(logname="ORCA", *args, **kwargs)
+        self.package = "ORCA"
         
     def __str__(self):
         """Return a string representation of the object."""

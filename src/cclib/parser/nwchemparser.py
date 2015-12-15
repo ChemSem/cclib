@@ -59,6 +59,8 @@ class NWChem(logfileparser.Logfile):
     def extract(self, inputfile, line):
         """Extract information from the file object inputfile."""
 
+        if "Northwest Computational" in line:
+            self.version = line.split()[5]
         # This is printed in the input module, so should always be the first coordinates,
         # and contains some basic information we want to parse as well. However, this is not
         # the only place where the coordinates are printed during geometry optimization,
@@ -226,6 +228,7 @@ class NWChem(logfileparser.Logfile):
                 while line.strip():
                     atomname, desc, shells, funcs, types = line.split()
                     atomelement = self.name2element(atomname)
+                    self.basisname = desc
 
                     self.shells[atomname] = types
                     atombasis_dict[atomelement] = int(funcs)
@@ -499,6 +502,10 @@ class NWChem(logfileparser.Logfile):
                 self.optdone = []
 
         # The line containing the final SCF energy seems to be always identifiable like this.
+        if "Total SCF energy" in line:
+            self.theory = "HF"
+        if "Total DFT energy" in line:
+            self.theory = "DFT"
         if "Total SCF energy" in line or "Total DFT energy" in line:
 
             # NWChem often does a line search during geometry optimization steps, reporting
@@ -743,7 +750,7 @@ class NWChem(logfileparser.Logfile):
         # for Hartree-Fock runs, though, so in that case make sure they are consistent.
         if line.strip() == "Mulliken population analysis":
 
-            self.skip_lines(inputfile, ['d', 'b', 'total_overlap_population', 'b'])
+            self.skip_lines(inputfile, ['d', 'b', 'total_overlap_population'])
 
             overlaps = []
             line= next(inputfile)
@@ -967,6 +974,7 @@ class NWChem(logfileparser.Logfile):
                     assert self.moments[3] == octupole
 
         if "Total MP2 energy" in line:
+            self.theory = "MP2"
             mpenerg = float(line.split()[-1])
             if not hasattr(self, "mpenergies"):
                 self.mpenergies = []

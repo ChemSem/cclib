@@ -564,6 +564,7 @@ class Gaussian(logfileparser.Logfile):
         #  E3=       -0.10518801D-01     EUMP3=      -0.75012800924D+02
         if line[34:39] == "EUMP3":
 
+            self.theory = "MP3"
             mp3energy = self.float(line.split("=")[2])
             self.mpenergies[-1].append(utils.convertor(mp3energy, "hartree", "eV"))
 
@@ -574,6 +575,7 @@ class Gaussian(logfileparser.Logfile):
         # Energy for most substitutions is used only (SDTQ by default)
         if line[34:42] == "UMP4(DQ)":
 
+            self.theory = "MP4"
             mp4energy = self.float(line.split("=")[2])
             line = next(inputfile)
             if line[34:43] == "UMP4(SDQ)":
@@ -596,10 +598,12 @@ class Gaussian(logfileparser.Logfile):
         # but append only the last one to ccenergies.
         # Only the highest level energy is appended - ex. CCSD(T), not CCSD.
         if line[1:10] == "DE(Corr)=" and line[27:35] == "E(CORR)=":
+            self.theory = "CCSD"
             self.ccenergy = self.float(line.split()[3])
         if line[1:10] == "T5(CCSD)=":
             line = next(inputfile)
             if line[1:9] == "CCSD(T)=":
+                self.theory = "CCSD-T"
                 self.ccenergy = self.float(line.split()[1])
         if line[12:53] == "Population analysis using the SCF density":
             if hasattr(self, "ccenergy"):
