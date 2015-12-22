@@ -79,8 +79,6 @@ class GAMESS(logfileparser.Logfile):
 #theory level
         if line[1:7] == "SCFTYP":
             self.theory = line.split()[0][8:]
-        if line[1:7] == "MPLEVL":
-            self.theory = "MP"+line.split()[1]
         if line[1:7] == "DFTTYP" and line[8:12] != "NONE":
             self.theory = "DFT"
             self.functional = line.split()[0][7:]
@@ -97,7 +95,7 @@ class GAMESS(logfileparser.Logfile):
                 elif line.split()[2] == "5":
                     self.basisname = "STO-5G"
             if basnm1 == "N21" :
-                if line.split()[2] == "3" and line.split()[3] == "POLAR=POPN31":
+                if line.split()[2] == "3" and line.split()[3] == "POLAR=COMMON":
                     self.basisname = "3-21G*"
                 if line.split()[2] == "3" and line.split()[3] == "POLAR=NONE":
                     self.basisname = "3-21G"
@@ -107,7 +105,7 @@ class GAMESS(logfileparser.Logfile):
                 if line.split()[2] == "6" and line.split()[3] == "POLAR=NONE":
                     self.basisname = "6-31G"
             if basnm1 == "N311" :
-                if line.split()[2] == "6" and line.split()[3] == "POLAR=POPN31":
+                if line.split()[2] == "6" and line.split()[3] == "POLAR=POPN311":
                     self.basisname = "6-311G*"
                 if line.split()[2] == "6" and line.split()[3] == "POLAR=NONE":
                     self.basisname = "6-311G"
@@ -189,6 +187,7 @@ class GAMESS(logfileparser.Logfile):
                 if len(line.split()) > 0:
                     # Only up to MP2 correction
                     if line.split()[0] == "E(MP2)=":
+                        self.theory = "MP2"
                         mp2energy = float(line.split()[1])
                         self.mpenergies[-1].append(utils.convertor(mp2energy, "hartree", "eV"))
                     # MP2 before higher order calculations
@@ -199,6 +198,7 @@ class GAMESS(logfileparser.Logfile):
                         mp3energy = float(line.split()[2])
                         self.mpenergies[-1].append(utils.convertor(mp3energy, "hartree", "eV"))
                     if line.split()[0] in ["E(MP4-SDQ)", "E(MP4-SDTQ)"]:
+                        self.theory = "MP4"
                         mp4energy = float(line.split()[2])
                         self.mpenergies[-1].append(utils.convertor(mp4energy, "hartree", "eV"))
 
@@ -210,11 +210,13 @@ class GAMESS(logfileparser.Logfile):
             ccenergy = float(line.split()[2])
             self.ccenergies.append(utils.convertor(ccenergy, "hartree", "eV"))
         if line.find("CCSD") >= 0 and line.split()[0:2] == ["CCSD", "ENERGY:"]:
+            self.theory = "CCSD"
             if not hasattr(self, "ccenergies"):
                 self.ccenergies = []
             ccenergy = float(line.split()[2])
             line = next(inputfile)
             if line[8:23] == "CCSD[T] ENERGY:":
+                self.theory = "CCSD-T"
                 ccenergy = float(line.split()[2])
                 line = next(inputfile)
                 if line[8:23] == "CCSD(T) ENERGY:":
@@ -1311,6 +1313,18 @@ class GAMESS(logfileparser.Logfile):
                     self.logger.warning('Overwriting previous multipole moments with new values')
                     self.logger.warning('This could be from post-HF properties or geometry optimization')
                     self.moments = [reference, dipole]
+        #NMR section
+        if line.strip() == "GIAO CHEMICAL SHIELDING TENSOR (PPM):":
+            if not hasattr(self, 'nmriso'):
+                self.nmriso=[]
+                self.nmranis=[]
+            self.skiplines(inputfile, ['iso', 'cols', 'anis', 'b'])
+            for i in range(natom):
+                self.skiplines(inputfile, ['x', 'y', 'z'])
+                line = next(inputfile)
+                self.nmriso.append(line.strip())
+                line = next(inputfile)
+                self.nmranis.append(line.split()[1])
 
         
 if __name__ == "__main__":
