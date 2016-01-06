@@ -146,8 +146,6 @@ class QChem(logfileparser.Logfile):
                 if '$rem' in line:
                     while '$end' not in line:
                         line = next(inputfile)
-                        if 'basis' in line.lower():
-                            self.basisname = line.split()[2]
                         if 'method' in line.lower():
                             method = line.split()[2].upper()
                             if method in wfn_method:
@@ -179,6 +177,9 @@ class QChem(logfileparser.Logfile):
 
                 line = next(inputfile)
 
+        #Parse the basis name
+        if 'Requested basis set' in line:
+            self.basisname = line.split()[-1]
         # Parse the general basis for `gbasis`, in the style used by
         # Gaussian.
         if 'Basis set in general basis input format:' in line:
