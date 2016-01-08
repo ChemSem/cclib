@@ -113,7 +113,11 @@ class QChem(logfileparser.Logfile):
             angmom = ('', 'S', 'P', 'D', 'F', 'G', 'H', 'I')
             for atom in self.atombasis:
                 bfcounts = dict()
+                dindex = -1
                 for bfindex in atom:
+                    #consider the contraction
+                    if bfindex < dindex:
+                        break
                     atomname, bfname = self.aonames[bfindex].split('_')
                     # Keep track of how many times each shell type has
                     # appeared.
@@ -127,6 +131,7 @@ class QChem(logfileparser.Logfile):
                         bfcounts[bfname] = angmom.index(bfname[0])
                     newbfname = '{}{}'.format(bfcounts[bfname], bfname)
                     self.aonames[bfindex] = '_'.join([atomname, newbfname])
+                    dindex = bfindex
 
     def extract(self, inputfile, line):
         """Extract information from the file object inputfile."""
@@ -153,6 +158,9 @@ class QChem(logfileparser.Logfile):
                             else:
                                 self.theory = 'DFT'
                                 self.functional = method
+                        if 'exchange' in line.lower():
+                            self.theory = 'DFT'
+                            self.functional = line.split()[1]
                         if 'print_orbitals' in line.lower():
                             # Stay with the default value if a number isn't
                             # specified.

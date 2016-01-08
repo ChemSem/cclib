@@ -247,7 +247,12 @@ class NWChem(logfileparser.Logfile):
         # This section contains general parameters for Hartree-Fock calculations,
         # which do not contain the 'General Information' section like most jobs.
         if line.strip() == "NWChem SCF Module":
-            self.skip_lines(inputfile, ['d', 'b', 'b', 'title', 'b', 'b', 'b'])
+            self.skip_lines(inputfile, ['d', 'b', 'b'])
+            line = next(inputfile)
+            if line.strip():
+                self.skip_lines(inputfile, ['title', 'b', 'b'])
+            else:
+                line = next(inputfile)
             line = next(inputfile)
             while line.strip():
                 if line[2:8] == "charge":
@@ -301,6 +306,12 @@ class NWChem(logfileparser.Logfile):
                 if not hasattr(self, 'scftargets'):
                     self.scftargets = []
                 self.scftargets.append([target_energy, target_density, target_gradient])
+
+        #DFT functional information
+        if "XC Information" in line:
+            line = next(inputfile)
+            line = next(inputfile)
+            self.functional = line.split()[0]
 
 
         # If the full overlap matrix is printed, it looks like this:

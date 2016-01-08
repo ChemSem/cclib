@@ -123,6 +123,8 @@ class ccData(object):
         "natom":          int,
         "nbasis":         int,
         "nmo":            int,
+        "nmriso":         numpy.ndarray,
+        "nmranis":        numpy.ndarray,
         "nocoeffs":       numpy.ndarray,
         "nooccnos":       numpy.ndarray,
         "optdone":        bool,

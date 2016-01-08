@@ -44,8 +44,10 @@ class CSX(filewriter.Writer):
         molMulti = data.mult
         wfnRestricted = False
         hasOrb = True if (hasattr(data, 'mocoeffs')) else False
+        hasOrbSym = True if (hasattr(data, 'mosyms')) else False
         hasFreq = True if (hasattr(data, 'vibfreqs')) else False
         hasProp = True if (hasattr(data, 'moments')) else False
+        hasNMR = True if (hasattr(data, 'nmriso')) else False
         hasElec = True if (hasattr(data, 'etoscs')) else False
         if molMulti == 1 :
             molSpin = 'RHF'
@@ -61,15 +63,17 @@ class CSX(filewriter.Writer):
                 orbEString = ' '.join(str(x) for x in orbEne[0])
                 orbNum = data.nmo
                 orbOcc = []
-                orbSym = data.mosyms
-                orbSymString = ' '.join( x for x in orbSym[0])
+                if hasOrbSym:
+                    orbSym = data.mosyms
+                    orbSymString = ' '.join( x for x in orbSym[0])
                 for iorb in range (orbNum):
                     elecNum = 2 if iorb < int(data.homos) else 0
                     orbOcc.append(elecNum)
                 orbOccString = ' '.join(str(x) for x in sorted(orbOcc,reverse=True))
                 wfn1 = api.waveFunctionType(orbitalCount=orbNum, \
-                        orbitalSymmetry=orbSymString, \
                         orbitalOccupancies=orbOccString)
+                if hasOrbSym:
+                    wfn1.set_orbitalSymmetry(orbSymString)
                 orbe1 = api.stringArrayType(unit='cs:eV')
                 orbe1.set_valueOf_(orbEString)
                 orbs1 = api.orbitalsType()
@@ -173,6 +177,18 @@ class CSX(filewriter.Writer):
             prop1.add_systemProperty(sprop2)
             prop1.add_systemProperty(sprop3)
             prop1.add_systemProperty(sprop4)
+        #NMR chemical shielding information
+        if hasNMR:
+            prop2 = api.propertiesType()
+            for iatm in range(atomNum):
+                aprop1 = api.propertyType(atomId='a'+str(iatm+1), \
+                        name='nmrShieldingIsotropic',unit='cs:ppm')
+                aprop1.set_valueOf_(data.nmriso[iatm])
+                aprop2 = api.propertyType(atomId='a'+str(iatm+1), \
+                        name='nmrShieldingAnisotropic',unit='cs:ppm')
+                aprop2.set_valueOf_(data.nmranis[iatm])
+                prop2.add_atomProperty(aprop1)
+                prop2.add_atomProperty(aprop2)
 
         #Electronic transition information
         if hasElec:
@@ -261,6 +277,8 @@ class CSX(filewriter.Writer):
                     scf1.set_waveFunction(wfn1)
                 if hasProp:
                     scf1.set_properties(prop1)
+                if hasNMR:
+                    scf1.set_properties(prop2)
                 if hasFreq:
                     scf1.set_vibrationalAnalysis(vib1)
                 if hasElec:
@@ -279,6 +297,8 @@ class CSX(filewriter.Writer):
                     dft1.set_waveFunction(wfn1)
                 if hasProp:
                     dft1.set_properties(prop1)
+                if hasNMR:
+                    dft1.set_properties(prop2)
                 if hasFreq:
                     dft1.set_vibrationalAnalysis(vib1)
                 if hasElec:
@@ -300,6 +320,8 @@ class CSX(filewriter.Writer):
                     mp21.set_waveFunction(wfn1)
                 if hasProp:
                     mp21.set_properties(prop1)
+                if hasNMR:
+                    mp21.set_properties(prop2)
                 if hasFreq:
                     mp21.set_vibrationalAnalysis(vib1)
                 sdm1.set_mp2(mp21)
@@ -325,6 +347,8 @@ class CSX(filewriter.Writer):
                     ccsd1.set_waveFunction(wfn1)
                 if hasProp:
                     ccsd1.set_properties(prop1)
+                if hasNMR:
+                    ccsd1.set_properties(prop2)
                 if hasFreq:
                     ccsd1.set_vibrationalAnalysis(vib1)
                 mdm1.set_ccsd(ccsd1)
@@ -343,6 +367,8 @@ class CSX(filewriter.Writer):
                     ccsd_t1.set_waveFunction(wfn1)
                 if hasProp:
                     ccsd_t1.set_properties(prop1)
+                if hasNMR:
+                    ccsd_t1.set_properties(prop2)
                 if hasFreq:
                     ccsd_t1.set_vibrationalAnalysis(vib1)
                 mdm1.set_ccsd(ccsd_t1)
