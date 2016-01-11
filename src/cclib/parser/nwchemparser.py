@@ -261,6 +261,11 @@ class NWChem(logfileparser.Logfile):
                 if line[2:13] == "open shells":
                     unpaired = int(line.split()[-1])
                     self.set_attribute('mult', 2*unpaired + 1)
+                if line[2:17] == "alpha electrons":
+                    alpha = int(line.split()[-1])
+                if line[2:17] == "beta  electrons":
+                    beta = int(line.split()[-1])
+                    self.set_attribute('mult', 2*(alpha-beta)+1)
                 if line[2:7] == "atoms":
                     natom = int(line.split()[-1])
                     self.set_attribute('natom', natom)
