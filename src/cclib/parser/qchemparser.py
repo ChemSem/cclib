@@ -113,11 +113,7 @@ class QChem(logfileparser.Logfile):
             angmom = ('', 'S', 'P', 'D', 'F', 'G', 'H', 'I')
             for atom in self.atombasis:
                 bfcounts = dict()
-                dindex = -1
                 for bfindex in atom:
-                    #consider the contraction
-                    if bfindex < dindex:
-                        break
                     atomname, bfname = self.aonames[bfindex].split('_')
                     # Keep track of how many times each shell type has
                     # appeared.
@@ -131,7 +127,6 @@ class QChem(logfileparser.Logfile):
                         bfcounts[bfname] = angmom.index(bfname[0])
                     newbfname = '{}{}'.format(bfcounts[bfname], bfname)
                     self.aonames[bfindex] = '_'.join([atomname, newbfname])
-                    dindex = bfindex
 
     def extract(self, inputfile, line):
         """Extract information from the file object inputfile."""
@@ -152,7 +147,7 @@ class QChem(logfileparser.Logfile):
                     while '$end' not in line:
                         line = next(inputfile)
                         if 'method' in line.lower():
-                            method = line.split()[2].upper()
+                            method = line.split()[-1].upper()
                             if method in wfn_method:
                                 self.theory = method
                             else:
@@ -160,7 +155,7 @@ class QChem(logfileparser.Logfile):
                                 self.functional = method
                         if 'exchange' in line.lower():
                             self.theory = 'DFT'
-                            self.functional = line.split()[1]
+                            self.functional = line.split()[-1]
                         if 'print_orbitals' in line.lower():
                             # Stay with the default value if a number isn't
                             # specified.
@@ -175,8 +170,10 @@ class QChem(logfileparser.Logfile):
                 # Charge and multiplicity are present in the input file, which is generally
                 # printed once at the beginning. However, it is also prined for fragment
                 # calculations, so make sure we parse only the first occurance.
-                if '$molecule' in line:
+                if '$molecule' in line :
                     line = next(inputfile)
+                    if line.split()[0] == "read":
+                        break
                     charge, mult = map(int, line.split())
                     if not hasattr(self, 'charge'):
                         self.set_attribute('charge', charge)
@@ -893,6 +890,10 @@ class QChem(logfileparser.Logfile):
 
             # Go back through `aonames` to create `atombasis`.
             assert len(self.aonames) == self.nbasis
+            if hasattr(self, 'atombasis'):
+                self.atombasis = []
+                for n in range(self.natom):
+                    self.atombasis.append([])
             for aoindex, aoname in enumerate(self.aonames):
                 atomindex = int(self.re_atomindex.search(aoname).groups()[0]) - 1
                 self.atombasis[atomindex].append(aoindex)
