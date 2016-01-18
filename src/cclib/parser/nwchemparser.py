@@ -1004,6 +1004,62 @@ class NWChem(logfileparser.Logfile):
             self.ccenergies.append([])
             self.ccenergies[-1].append(utils.convertor(ccenerg, "hartree", "eV"))
 
+        if "(Projected Frequencies expressed in cm-1)" in line:
+            self.skip_line(inputfile, 'blank')
+
+            line = next(inputfile)
+            while all([c.isdigit() for c in line.split()]):
+
+                nmode =  len(line.split())
+                line = next(inputfile)
+                line = next(inputfile)
+                if line[1:12] == "P.Frequency":
+                    vibfreqs = list(map(float, line.strip().split()[1:]))
+                line = next(inputfile)
+                line = next(inputfile)
+                
+                if line[1:11].isspace() and line.split()[0].isdigit():
+
+                    vibdisps = []
+                    for i in range(nmode):
+                        vibdisps.append([])
+                        for n in range(self.natom):
+                            vibdisps[i].append([])
+
+                    for i in range(nmode):
+                        disp = float(line.split()[i+1])
+                        vibdisps[i][0].append(disp)
+                    for ia in range(self.natom*3-1):
+                        line = next(inputfile)
+                        iatm = (ia+1)//3
+                        for i in range(nmode):
+                            disp = float(line.split()[i+1])
+                            vibdisps[i][iatm].append(disp)
+
+                line = next(inputfile)
+
+                if not line.strip():
+
+                    if not hasattr(self, "vibfreqs"):
+                        self.vibfreqs = []
+                    if not hasattr(self, "vibdisps"):
+                        self.vibdisps = []
+
+                    self.vibfreqs.extend(vibfreqs)
+                    self.vibdisps.extend(vibdisps)
+
+                line = next(inputfile)
+
+        if "Projected Infra Red Intensities" in line:
+            if not hasattr(self, "vibirs"):
+                self.vibirs = []
+            self.skip_lines(inputfile, ['header','db'])
+            line = next(inputfile)
+            while len(line.split()) > 1:
+                self.vibirs.append(line.split()[5])
+                line = next(inputfile)
+
+
     def after_parsing(self):
         """NWChem-specific routines for after parsing file.
 
