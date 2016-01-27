@@ -185,6 +185,8 @@ class QChem(logfileparser.Logfile):
         #Parse the basis name
         if 'Requested basis set' in line:
             self.basisname = line.split()[-1]
+            if self.basisname == "6-31G(d)":
+                self.basisname = "6-31G*"
         # Parse the general basis for `gbasis`, in the style used by
         # Gaussian.
         if 'Basis set in general basis input format:' in line:
