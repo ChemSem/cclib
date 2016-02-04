@@ -729,7 +729,8 @@ class NWChem(logfileparser.Logfile):
         #    1 C    6     6.00   1.99  1.14  2.87
         #    2 C    6     6.00   1.99  1.14  2.87
         # ...
-        if line.strip() == "Mulliken analysis of the total density":
+        if line.strip() == "Mulliken analysis of the total density" or \
+           line.strip() == "Total Density - Mulliken Population Analysis":
 
             if not hasattr(self, "atomcharges"):
                 self.atomcharges = {}
@@ -1058,6 +1059,16 @@ class NWChem(logfileparser.Logfile):
             while len(line.split()) > 1:
                 self.vibirs.append(line.split()[5])
                 line = next(inputfile)
+
+        if "Chemical Shielding Tensors" in line:
+            if not hasattr(self, "nmriso"):
+                self.nmriso = []
+            if not hasattr(self, "nmranis"):
+                self.nmranis = []
+        if "isotropic" in line:
+            self.nmriso.append(line.split()[-1])
+        if "anisotropy" in line:
+            self.nmranis.append(line.split()[-1])
 
 
     def after_parsing(self):

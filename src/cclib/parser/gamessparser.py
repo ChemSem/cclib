@@ -1318,11 +1318,12 @@ class GAMESS(logfileparser.Logfile):
             if not hasattr(self, 'nmriso'):
                 self.nmriso=[]
                 self.nmranis=[]
-            self.skiplines(inputfile, ['iso', 'cols', 'anis', 'b'])
-            for i in range(natom):
-                self.skiplines(inputfile, ['x', 'y', 'z'])
+            self.skip_lines(inputfile, ['iso', 'cols', 'anis'])
+            for i in range(self.natom):
+                self.skip_lines(inputfile, ['b','x', 'y', 'z'])
                 line = next(inputfile)
                 self.nmriso.append(line.strip())
+                line = next(inputfile)
                 line = next(inputfile)
                 self.nmranis.append(line.split()[1])
 
