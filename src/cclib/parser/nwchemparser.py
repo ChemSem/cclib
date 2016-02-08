@@ -998,7 +998,16 @@ class NWChem(logfileparser.Logfile):
             self.mpenergies.append([])
             self.mpenergies[-1].append(utils.convertor(mpenerg, "hartree", "eV"))
 
+        if "CCSD total energy / hartree" in line or "total CCSD energy:" in line:
+            self.theory = "CCSD"
+            ccenerg = float(line.split()[-1])
+            if not hasattr(self, "ccenergies"):
+                self.ccenergies = []
+            self.ccenergies.append([])
+            self.ccenergies[-1].append(utils.convertor(ccenerg, "hartree", "eV"))
+
         if "CCSD(T) total energy / hartree" in line:
+            self.theory = "CCSD-T"
             ccenerg = float(line.split()[-1])
             if not hasattr(self, "ccenergies"):
                 self.ccenergies = []

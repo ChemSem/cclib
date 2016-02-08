@@ -165,11 +165,11 @@ class CSX(filewriter.Writer):
             molDipoleZ = data.moments[1][2]
             molDipoleTot = math.sqrt(molDipoleX*molDipoleX+molDipoleY*molDipoleY+molDipoleZ*molDipoleZ)
             prop1 = api.propertiesType()
-            sprop1 = api.propertyType(name='dipoleMomentX',unit='cs:debye')
+            sprop1 = api.propertyType(name='dipoleMomentX',unit='cs:debye',moleculeId='m1')
             sprop1.set_valueOf_(molDipoleX)
-            sprop2 = api.propertyType(name='dipoleMomentY',unit='cs:debye')
+            sprop2 = api.propertyType(name='dipoleMomentY',unit='cs:debye',moleculeId='m1')
             sprop2.set_valueOf_(molDipoleY)
-            sprop3 = api.propertyType(name='dipoleMomentZ',unit='cs:debye')
+            sprop3 = api.propertyType(name='dipoleMomentZ',unit='cs:debye',moleculeId='m1')
             sprop3.set_valueOf_(molDipoleZ)
             sprop4 = api.propertyType(name='dipoleMomentAverage',unit='cs:debye')
             sprop4.set_valueOf_(molDipoleTot)
@@ -181,10 +181,10 @@ class CSX(filewriter.Writer):
         if hasNMR:
             prop2 = api.propertiesType()
             for iatm in range(atomNum):
-                aprop1 = api.propertyType(atomId='a'+str(iatm+1), \
+                aprop1 = api.propertyType(atomId='a'+str(iatm+1), moleculeId='m1', \
                         name='nmrShieldingIsotropic',unit='cs:ppm')
                 aprop1.set_valueOf_(data.nmriso[iatm])
-                aprop2 = api.propertyType(atomId='a'+str(iatm+1), \
+                aprop2 = api.propertyType(atomId='a'+str(iatm+1), moleculeId='m1', \
                         name='nmrShieldingAnisotropic',unit='cs:ppm')
                 aprop2.set_valueOf_(data.nmranis[iatm])
                 prop2.add_atomProperty(aprop1)
@@ -282,7 +282,7 @@ class CSX(filewriter.Writer):
                 if hasFreq:
                     scf1.set_vibrationalAnalysis(vib1)
                 if hasElec:
-                    scf1.set_eletronicSpectra(elec1)
+                    scf1.set_electronicSpectra(elec1)
                 sdm1.set_abinitioScf(scf1)
             #DFT
             elif (calcType == 'DFT'):
@@ -302,7 +302,7 @@ class CSX(filewriter.Writer):
                 if hasFreq:
                     dft1.set_vibrationalAnalysis(vib1)
                 if hasElec:
-                    scf1.set_eletronicSpectra(elec1)
+                    dft1.set_electronicSpectra(elec1)
                 sdm1.set_dft(dft1)
             #MP2
             elif (calcType == 'MP2'):
@@ -337,7 +337,7 @@ class CSX(filewriter.Writer):
                         basisSet='bse:'+basisName)
                 ene1 = api.energiesType(unit='cs:eV')
                 ee_ene1 = api.energyType(type_='cs:totalPotential')
-                ee_ene1.set_valueOf_(float(data.mpenergies[0]))
+                ee_ene1.set_valueOf_(float(data.ccenergies[0]))
                 ce_ene1 = api.energyType(type_='cs:correlation')
                 ce_ene1.set_valueOf_(float(data.ccenergies[0])-float(molEE))
                 ene1.add_energy(ee_ene1)
@@ -357,7 +357,7 @@ class CSX(filewriter.Writer):
                         basisSet='bse:'+basisName)
                 ene1 = api.energiesType(unit='cs:eV')
                 ee_ene1 = api.energyType(type_='cs:totalPotential')
-                ee_ene1.set_valueOf_(float(data.mpenergies[0]))
+                ee_ene1.set_valueOf_(float(data.ccenergies[0]))
                 ce_ene1 = api.energyType(type_='cs:correlation')
                 ce_ene1.set_valueOf_(float(data.ccenergies[0])-float(molEE))
                 ene1.add_energy(ee_ene1)
