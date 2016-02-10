@@ -1201,6 +1201,20 @@ class QChem(logfileparser.Logfile):
         # 'nocoeffs'
         # 'nooccnos'
         # 'vibanharms'
+        #NMR
+        if 'NMR-SHIELDING TENSORS' in line:
+            if not hasattr(self, 'nmriso'):
+                self.nmriso=[]
+            if not hasattr(self, 'nmranis'):
+                self.nmranis=[]
+
+        if 'Summary' in line and len(line.split()) == 1:
+            self.skip_lines(inputfile, ['d','b','header','d'])
+            line = next(inputfile)
+            while line.strip():
+                self.nmriso.append(line.split()[3])
+                self.nmranis.append(line.split()[4])
+                line = next(inputfile)
 
     def parse_charge_section(self, inputfile, chargetype):
         """Parse the population analysis charge block."""
