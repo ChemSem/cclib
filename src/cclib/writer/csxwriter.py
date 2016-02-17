@@ -39,7 +39,10 @@ class CSX(filewriter.Writer):
         #cmlfile = open( fileName + '.cml', 'w')
         #xyz = ccwrite(data, 'cml', cmlfile)
         atomNum = data.natom
-        basisName = data.basisname
+        if (hasattr(data, 'basisname')):
+            basisName = self.basisname
+        else:
+            basisName = 'none'
         molCharge = data.charge
         molMulti = data.mult
         wfnRestricted = False
@@ -55,7 +58,7 @@ class CSX(filewriter.Writer):
         else:
             molSpin = 'UHF'
         calcType = data.theory
-        molEE = data.scfenergies[0]
+        molEE = data.scfenergies[-1]
         #Wavefunction
         if hasOrb:
             if wfnRestricted :
@@ -234,9 +237,9 @@ class CSX(filewriter.Writer):
         #obmol1 = openbabel.OBMol()
         for iatm in range(atomNum):
             #   xCoord = float(data.atomcoords[iatm,0])
-            xCoord = data.atomcoords[0,iatm,0]
-            yCoord = data.atomcoords[0,iatm,1]
-            zCoord = data.atomcoords[0,iatm,2]
+            xCoord = data.atomcoords[-1,iatm,0]
+            yCoord = data.atomcoords[-1,iatm,1]
+            zCoord = data.atomcoords[-1,iatm,2]
             xCoord1 = api.dataWithUnitsType(unit='cs:angstrom')
             xCoord1.set_valueOf_(xCoord)
             yCoord1 = api.dataWithUnitsType(unit='cs:angstrom')
@@ -257,7 +260,7 @@ class CSX(filewriter.Writer):
         cs1.set_molecularSystem(ms1)
 
         #molCalculation section
-        sd_wfn_method = ['HF', 'DFT', 'MP2', 'MP3', 'MP4']
+        sd_wfn_method = ['HF', 'DFT', 'MP2', 'MP3', 'MP4', 'AM1', 'PM3', 'PM6']
         md_wfn_method = ['CCD', 'CCSD', 'CCSD-T']
         mc1 = api.mcType()
         qm1 = api.qmCalcType()
@@ -310,9 +313,9 @@ class CSX(filewriter.Writer):
                         basisSet='bse:'+basisName)
                 ene1 = api.energiesType(unit='cs:eV')
                 ee_ene1 = api.energyType(type_='cs:totalPotential')
-                ee_ene1.set_valueOf_(float(data.mpenergies[0]))
+                ee_ene1.set_valueOf_(float(data.mpenergies[-1]))
                 ce_ene1 = api.energyType(type_='cs:correlation')
-                ce_ene1.set_valueOf_(float(data.mpenergies[0])-float(molEE))
+                ce_ene1.set_valueOf_(float(data.mpenergies[-1])-float(molEE))
                 ene1.add_energy(ee_ene1)
                 ene1.add_energy(ce_ene1)
                 mp21.set_energies(ene1)
@@ -325,6 +328,26 @@ class CSX(filewriter.Writer):
                 if hasFreq:
                     mp21.set_vibrationalAnalysis(vib1)
                 sdm1.set_mp2(mp21)
+            #Semiempirical methods
+            elif (calcType == 'AM1' or calcType == 'PM3' or calcType == 'PM6'):
+                sem1 = api.resultType(methodology=calcType,spinType='cs:'+molSpin)
+                ene1 = api.energiesType(unit='cs:eV')
+                ee_ene1 = api.energyType(type_='cs:totalPotential')
+                ee_ene1.set_valueOf_(float(molEE))
+                hof_ene1 = api.energyType(type_='cs:heatofformation')
+                hof_ene1.set_valueOf_(float(data.hofenergies[-1]))
+                ene1.add_energy(ee_ene1)
+                ene1.add_energy(hof_ene1)
+                sem1.set_energies(ene1)
+                if hasOrb:
+                    sem1.set_waveFunction(wfn1)
+                if hasProp:
+                    sem1.set_properties(prop1)
+                if hasNMR:
+                    sem1.set_properties(prop2)
+                if hasFreq:
+                    sem1.set_vibrationalAnalysis(vib1)
+                sdm1.set_semiEmpiricalScf(sem1)
             else:
                 print ('The current CSX does not support this method')
 
@@ -339,7 +362,7 @@ class CSX(filewriter.Writer):
                 ee_ene1 = api.energyType(type_='cs:totalPotential')
                 ee_ene1.set_valueOf_(float(data.ccenergies[0]))
                 ce_ene1 = api.energyType(type_='cs:correlation')
-                ce_ene1.set_valueOf_(float(data.ccenergies[0])-float(molEE))
+                ce_ene1.set_valueOf_(float(data.ccenergies[-1])-float(molEE))
                 ene1.add_energy(ee_ene1)
                 ene1.add_energy(ce_ene1)
                 ccsd1.set_energies(ene1)
@@ -357,9 +380,9 @@ class CSX(filewriter.Writer):
                         basisSet='bse:'+basisName)
                 ene1 = api.energiesType(unit='cs:eV')
                 ee_ene1 = api.energyType(type_='cs:totalPotential')
-                ee_ene1.set_valueOf_(float(data.ccenergies[0]))
+                ee_ene1.set_valueOf_(float(data.ccenergies[-1]))
                 ce_ene1 = api.energyType(type_='cs:correlation')
-                ce_ene1.set_valueOf_(float(data.ccenergies[0])-float(molEE))
+                ce_ene1.set_valueOf_(float(data.ccenergies[-1])-float(molEE))
                 ene1.add_energy(ee_ene1)
                 ene1.add_energy(ce_ene1)
                 ccsd_t1.set_energies(ene1)

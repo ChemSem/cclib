@@ -48,6 +48,7 @@ class ccData(object):
         geovalues -- current values for convergence of geometry optmization (array[1])
         grads -- current values of forces (gradients) in geometry optimization (array[3])
         hessian -- elements of the force constant matrix (array[1])
+        hofenergies -- heat of formation after semiempirical calculation (array[1], eV)
         homos -- molecular orbital indices of HOMO(s) (array[1])
         mocoeffs -- molecular orbital coefficients (list of arrays[2])
         moenergies -- molecular orbital energies (list of arrays[1], eV)
@@ -113,6 +114,7 @@ class ccData(object):
         "geovalues":      numpy.ndarray,
         "grads":          numpy.ndarray,
         "hessian":        numpy.ndarray,
+        "hofenergies":    numpy.ndarray,
         "homos":          numpy.ndarray,
         "mocoeffs":       list,
         "moenergies":     list,

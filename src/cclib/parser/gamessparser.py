@@ -77,7 +77,7 @@ class GAMESS(logfileparser.Logfile):
             self.version = line.split()[4]+line.split()[5]+line.split()[6]
 
 #theory level
-        if line[1:7] == "SCFTYP":
+        if line[1:7] == "SCFTYP" and not hasattr(self, "theory"):
             self.theory = line.split()[0][8:]
         if line[1:7] == "DFTTYP" and line[8:12] != "NONE":
             self.theory = "DFT"
@@ -85,6 +85,8 @@ class GAMESS(logfileparser.Logfile):
 #basis set name
         if line[5:11] == "GBASIS":
             basnm1 = line.split()[0][7:]
+            if basnm1 == "PM3" or basnm1 == "AM1":
+                self.theory = basnm1
             if basnm1 == "STO" :
                 if line.split()[2] == "2":
                     self.basisname = "STO-2G"
@@ -153,6 +155,12 @@ class GAMESS(logfileparser.Logfile):
                 self.scfenergies = []
             temp = line.split()
             self.scfenergies.append(utils.convertor(float(temp[temp.index("IS") + 1]), "hartree", "eV"))
+        # heat of formation for semiempirical methods
+        if "HEAT OF FORMATION IS" in line:
+            if not hasattr(self, "hofenergies"):
+                self.hofenergies = []
+            temp = line.split()
+            self.hofenergies.append(utils.convertor(float(temp[temp.index("IS") + 1]), "kcal", "eV"))
 
         # For total energies after Moller-Plesset corrections, the output looks something like this:
         #
@@ -1262,6 +1270,18 @@ class GAMESS(logfileparser.Logfile):
                 line = next(inputfile)
             self.atomcharges["mulliken"] = mulliken
             self.atomcharges["lowdin"] = lowdin
+        #atomic charges from semiempirical calculations
+        if "MOPAC CHARGES" in line:
+            if not hasattr(self, "atomcharges"):
+                self.atomcharges = {}
+
+            self.skip_lines(inputfile, ['d','header'])
+            line = next(inputfile)
+            mulliken = []
+            while line.strip():
+                mulliken.append(float(line.split()[2]))
+                line = next(inputfile)
+            self.atomcharges["mulliken"] = mulliken
 
         #          ---------------------
         #          ELECTROSTATIC MOMENTS
