@@ -40,7 +40,7 @@ class CSX(filewriter.Writer):
         #xyz = ccwrite(data, 'cml', cmlfile)
         atomNum = data.natom
         if (hasattr(data, 'basisname')):
-            basisName = self.basisname
+            basisName = data.basisname
         else:
             basisName = 'none'
         molCharge = data.charge
