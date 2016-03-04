@@ -233,7 +233,10 @@ class CSX(filewriter.Writer):
         temp1.set_valueOf_(0.0)
         ms1.set_systemTemperature(temp1)
         mol1 = api.moleculeType(id='m1',atomCount=atomNum)
-        atmCharge = data.atomcharges["mulliken"]
+        if hasattr(data, "atomcharges"):
+            atmCharge = data.atomcharges["mulliken"]
+        else:
+            atmCharge = [0]*atomNum
         #obmol1 = openbabel.OBMol()
         for iatm in range(atomNum):
             #   xCoord = float(data.atomcoords[iatm,0])

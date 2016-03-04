@@ -79,7 +79,10 @@ class DALTON(logfileparser.Logfile):
         #  Threshold for neglecting AO integrals:  1.00D-12
         #
         if line[4:30] == "This is output from DALTON":
-            self.version = line.split()[5]
+            if line.split()[5] == "release":
+                self.version = line.split()[6][6:]
+            else:
+                self.version = line.split()[5]
         
         if line[2:16] == "Basis set used":
             #self.basisname = re.findall(r'"([^"]*)"', line)
@@ -480,10 +483,13 @@ class DALTON(logfileparser.Logfile):
                 line = next(inputfile)
                 temp = line.split()
 
-                if i == 0:
+                if self.version == "2016.0":
                     coords = [4, 7, 10]
                 else:
-                    coords = [6, 9, 12]
+                    if i == 0:
+                        coords = [4, 7, 10]
+                    else:
+                        coords = [6, 9, 12]
                 atomcoords.append([utils.convertor(float(temp[i]), "bohr", "Angstrom") for i in coords])
             self.atomcoords.append(atomcoords)
 
