@@ -505,17 +505,16 @@ class DALTON(logfileparser.Logfile):
         # Extract the dipole moment
         if "Dipole moment components" in line:
             reference = [0.0, 0.0, 0.0]
-            dipole = numpy.zeros(3)
+            dipole = []
+            self.skip_lines(inputfile, ['d','b','header','b'])
             line = next(inputfile)
-            line = next(inputfile)
-            line = next(inputfile)
-            if not "zero by symmetry" in line:
-                line = next(inputfile)
-
-                line = next(inputfile)
-                temp = line.split()
-                for i in range(3):
-                    dipole[i] = float(temp[2])  # store the Debye value
+            if "zero by symmetry" in line:
+                dipole = [0.0, 0.0, 0.0]
+            else:
+                while line.strip():
+                    temp = line.split()
+                    dipole.append(float(temp[2]))  # store the Debye value
+                    line = next(inputfile)
             if not hasattr(self, 'moments'):
                 self.moments = [reference, dipole]
             else:
