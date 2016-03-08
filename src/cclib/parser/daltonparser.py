@@ -406,10 +406,12 @@ class DALTON(logfileparser.Logfile):
         # @    Final gradient norm:           0.000003746706
         # ...
         #
-        if "Final HF energy" in line:
+        if "Final HF energy" in line and not hasattr(self, "mpenergies"):
             self.theory = "HF"
         if "Final DFT energy" in line:
             self.theory = "DFT"
+        if "This is a DFT calculation of type" in line:
+            self.functional = line.split()[-1]
 
         if "Final DFT energy" in line or "Final HF energy" in line:
             if not hasattr(self, "scfenergies"):
