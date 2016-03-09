@@ -525,6 +525,69 @@ class DALTON(logfileparser.Logfile):
         if not hasattr(self, 'optdone'):
             self.optdone = []
 
+        # Vibrational Analysis
+        if "Vibrational Frequencies and IR Intensities" in line:
+            if not hasattr(self, 'vibsyms'):
+                self.vibsyms = []
+            if not hasattr(self, 'vibfreqs'):
+                self.vibfreqs = []
+            if not hasattr(self, 'vibirs'):
+                self.vibirs = []
+            self.skip_lines(inputfile, ['d','b','header','header','header','d'])
+            line = next(inputfile)
+            while line.strip():
+                self.vibsyms.append(line.split()[1])
+                self.vibfreqs.append(float(line.split()[2]))
+                self.vibirs.append(float(line.split()[4]))
+                line = next(inputfile)
+
+        if "Normal Coordinates" in line:
+            if not hasattr(self, 'vibdisps'):
+                self.vibdisps = []
+            self.skip_lines(inputfile, ['d','b','b'])
+            
+            totalMode = len(self.vibfreqs)
+            iMode = 0
+            line = next(inputfile)
+            while iMode < totalMode:
+                if line.split()[0].isdigit():
+                    nmode = len(line.split())/2
+                self.skip_lines(inputfile, ['d','b'])
+                vibdisps = []
+                for i in range(nmode):
+                    vibdisps.append([])
+                    for iatm in range(self.natom):
+                        vibdisps[i].append([])
+
+                ia = 0
+                while ia < self.natom-1:
+                    for ic in range(3):
+                        line = next(inputfile)
+                        if not line.strip():
+                            line = next(inputfile)
+                            ia += 1
+                        for i in range(nmode):
+                            disp = float(line.split()[i+2])
+                            vibdisps[i][ia].append(disp)
+
+                iMode += nmode
+                line = next(inputfile)
+                line = next(inputfile)
+                line = next(inputfile)
+                self.vibdisps.extend(vibdisps)
+        #NMR information
+        if "@2 atom   shielding" in line:
+            if not hasattr(self, 'nmriso'):
+                self.nmriso = []
+            if not hasattr(self, 'nmranis'):
+                self.nmranis = []
+            line = next(inputfile)
+            line = next(inputfile)
+            while line.strip():
+                self.nmriso.append(float(line.split()[2]))
+                self.nmranis.append(float(line.split()[5]))
+                line = next(inputfile)
+
 
 if __name__ == "__main__":
     import doctest, daltonparser, sys
