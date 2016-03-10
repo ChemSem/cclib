@@ -1402,6 +1402,18 @@ class Gaussian(logfileparser.Logfile):
         if line[1:12] == "Temperature":
             self.set_attribute('temperature', float(line.split()[1]))
 
+        #Extract NMR calculation
+        if "SCF GIAO Magnetic shielding tensor (ppm):" in line:
+            if not hasattr(self, "nmriso"):
+                self.nmriso=[]
+            if not hasattr(self, "nmranis"):
+                self.nmranis=[]
+
+        if "Isotropic" in line:
+            self.nmriso.append(line.split()[4])
+            self.nmranis.append(line.split()[7])
+
+
 
 if __name__ == "__main__":
     import doctest, gaussianparser, sys
