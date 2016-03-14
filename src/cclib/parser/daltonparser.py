@@ -191,7 +191,7 @@ class DALTON(logfileparser.Logfile):
         #
         if "@    Total charge of the molecule" in line:
             self.set_attribute("charge", int(line.split()[-1]))
-        if "@    Spin multiplicity and 2 M_S                1         0" in line:
+        if "@    Spin multiplicity and 2 M_S" in line:
             self.set_attribute("mult", int(line.split()[-2]))
 
         #     Orbital specifications
@@ -333,6 +333,9 @@ class DALTON(logfileparser.Logfile):
             if "Only the" in line:
                 self.skip_line(inputfile, 'blank')
                 line = next(inputfile)
+            else:
+                self.skip_lines(inputfile, ['header','header','header','header'])
+                line = next(inputfile)
             nelectrons = int(line.split()[-1])
             
             line = next(inputfile)
@@ -389,6 +392,50 @@ class DALTON(logfileparser.Logfile):
                     self.set_attribute('nmo', len(self.moenergies[0]))
 
             #self.mocoeffs = [numpy.zeros((self.nmo, self.nbasis), "d")]
+
+        if "Hartree-Fock orbital energies, symmetry" in line:
+            if not hasattr(self, 'moenergies'):
+                self.moenergies = [[]]
+
+            line = next(inputfile)
+            line = next(inputfile)
+
+            moenergies = []
+            while line.strip():
+                moenergies = map(float, line.split())
+                self.moenergies[0].extend(moenergies)
+                line = next(inputfile)
+
+        if "Molecular orbitals for symmetry species" in line:
+            if not hasattr(self, "nmo"):
+                self.nmo = self.nbasis
+                if len(self.moenergies[0]) != self.nmo:
+                    self.set_attribute('nmo', len(self.moenergies[0]))
+
+            mocoeffs = [numpy.zeros((self.nmo, self.nbasis), "d")]
+
+            self.skip_lines(inputfile, ['d','b'])
+
+            imo = 0
+            while imo < self.nmo:
+                line = next(inputfile)
+                if "Total CPU  time used in SIRIUS" in line:
+                    self.nmo = imo
+                    break
+                cmo = len(line.split())-1
+                ibas = 0
+                coeffs = []
+                line = next(inputfile)
+                while line.strip():
+                    coeffs = map(float, line.split()[3:])
+                    mocoeffs[0][imo:cmo+imo,ibas] = coeffs
+                    ibas += 1
+                    line = next(inputfile)
+
+                imo += cmo
+
+            self.mocoeffs = mocoeffs
+
 
         #                       .-----------------------------------.
         #                       | >>> Final results from SIRIUS <<< |

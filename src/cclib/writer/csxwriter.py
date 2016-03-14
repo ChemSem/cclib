@@ -57,6 +57,9 @@ class CSX(filewriter.Writer):
             wfnRestricted = True
         else:
             molSpin = 'UHF'
+            if data.package == "DALTON":
+                molSpin = 'ROHF'
+                wfnRestricted = True
         calcType = data.theory
         molEE = data.scfenergies[-1]
         #Wavefunction
