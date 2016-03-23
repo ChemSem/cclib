@@ -138,6 +138,7 @@ class ccData(object):
         "scfenergies":    numpy.ndarray,
         "scftargets":     numpy.ndarray,
         "scfvalues":      list,
+        "spintype":       str,
         "temperature":    float,
         "theory":         str,
         "version":        str,
