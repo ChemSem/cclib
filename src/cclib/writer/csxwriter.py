@@ -52,14 +52,14 @@ class CSX(filewriter.Writer):
         hasProp = True if (hasattr(data, 'moments')) else False
         hasNMR = True if (hasattr(data, 'nmriso')) else False
         hasElec = True if (hasattr(data, 'etoscs')) else False
+        molSpin = data.spintype if (hasattr(data, 'spintype')) else 'RHF'
         if molMulti == 1 :
-            molSpin = 'RHF'
             wfnRestricted = True
         else:
-            molSpin = 'UHF'
-            if data.package == "DALTON":
-                molSpin = 'ROHF'
+            if molSpin == 'ROHF':
                 wfnRestricted = True
+            else:
+                molSpin = 'UHF'
         calcType = data.theory
         molEE = data.scfenergies[-1]
         #Wavefunction
@@ -73,7 +73,15 @@ class CSX(filewriter.Writer):
                     orbSym = data.mosyms
                     orbSymString = ' '.join( x for x in orbSym[0])
                 for iorb in range (orbNum):
-                    elecNum = 2 if iorb < int(data.homos) else 0
+                    if molSpin == "ROHF":
+                        if iorb < int(data.homos[0]):
+                            elecNum = 2
+                        elif iorb == int(data.homos[0]):
+                            elecNum = 1
+                        else:
+                            elecNum = 0
+                    else:
+                        elecNum = 0 if iorb > int(data.homos) else 2
                     orbOcc.append(elecNum)
                 orbOccString = ' '.join(str(x) for x in sorted(orbOcc,reverse=True))
                 wfn1 = api.waveFunctionType(orbitalCount=orbNum, \
