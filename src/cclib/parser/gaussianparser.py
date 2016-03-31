@@ -1413,6 +1413,17 @@ class Gaussian(logfileparser.Logfile):
             self.nmriso.append(line.split()[4])
             self.nmranis.append(line.split()[7])
 
+        if "Dipole moment" in line:
+            if not hasattr(self, "moments"):
+                self.moments = []
+            reference = [0.0, 0.0, 0.0]
+            self.moments.append(reference)
+
+            line = next(inputfile)
+            cols = line.split()
+            moments = list(map(float, [cols[1], cols[3], cols[5]]))
+            self.moments.append(moments)
+
 
 
 if __name__ == "__main__":
