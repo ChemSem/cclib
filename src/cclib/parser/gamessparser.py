@@ -577,7 +577,7 @@ class GAMESS(logfileparser.Logfile):
 
             # Remember the type of SCF.
             self.scftype = line.strip()[:-16]
-            if "ROHF" or "RO-" in self.scftype:
+            if "ROHF" in self.scftype or "RO-" in self.scftype:
                 self.spintype = "ROHF"
 
             self.skip_line(inputfile, 'dashes')
