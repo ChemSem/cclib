@@ -836,7 +836,7 @@ class DALTON(logfileparser.Logfile):
             self.mpenergies.append([])
             self.mpenergies[-1].append(energ)
 
-        if "Total CC2   energy:" in line:
+        if "Total CC2   energy:" in line or "Total CCSD  energy:" in line:
             self.theory = "CCSD"
             energ = utils.convertor(float(line.split()[-1]), 'hartree', 'eV')
             if not hasattr(self, "ccenergies"):

@@ -172,6 +172,8 @@ class CSX(filewriter.Writer):
             vib1.set_normalModes(norms1)
 
         #dipole moments information
+        if len(data.moments) == 1:
+            hasProp = False
         if hasProp:
         #    au2db = 2.541766
             molDipoleX = data.moments[1][0]
@@ -208,7 +210,7 @@ class CSX(filewriter.Writer):
         if hasElec:
             transStr = ' '.join(str(x) for x in data.etenergies)
             oscilStr = ' '.join(str(x) for x in data.etoscs)
-            elec1 = api.elecSpectraType()
+            elec1 = api.elecSpectraType(transitionCount=len(data.etenergies))
             trans1 = api.stringArrayType(unit="cs:cm-1")
             trans1.set_valueOf_(transStr)
             oscil1 = api.stringArrayType()
@@ -303,8 +305,12 @@ class CSX(filewriter.Writer):
                 sdm1.set_abinitioScf(scf1)
             #DFT
             elif (calcType == 'DFT'):
-                dft1 = api.resultType(methodology='cs:normal',spinType='cs:'+molSpin, \
-                        basisSet='bse:'+basisName, dftFunctional='cs:'+data.functional)
+                if hasElec:
+                    dft1 = api.resultType(methodology='cs:tddft',spinType='cs:'+molSpin, \
+                            basisSet='bse:'+basisName, dftFunctional='cs:'+data.functional)
+                else:
+                    dft1 = api.resultType(methodology='cs:normal',spinType='cs:'+molSpin, \
+                            basisSet='bse:'+basisName, dftFunctional='cs:'+data.functional)
                 ene1 = api.energiesType(unit='cs:eV')
                 ee_ene1 = api.energyType(type_='cs:totalPotential')
                 ee_ene1.set_valueOf_(float(molEE))
