@@ -102,7 +102,8 @@ class GAMESS(logfileparser.Logfile):
                 if line.split()[2] == "3" and line.split()[3] == "POLAR=NONE":
                     self.basisname = "3-21G"
             if basnm1 == "N31" :
-                if line.split()[2] == "6" and line.split()[3] == "POLAR=POPN31":
+                if line.split()[2] == "6" and (line.split()[3] == "POLAR=POPN31" \
+                        or line.split()[3] == "POLAR=POPLE"):
                     self.basisname = "6-31G*"
                     line = next(inputfile)
                     if line.split()[-1] == "T":
@@ -406,7 +407,9 @@ class GAMESS(logfileparser.Logfile):
             self.skip_lines(inputfile, ['d', 'b'])
 
             # Loop while states are still being printed.
-            line = next(inputfile)
+            # remove some lines about symmetry
+            while "STATE #" not in line:
+                line = next(inputfile)
             while line[1:6] == "STATE":
 
                 self.updateprogress(inputfile, "Excited States")
