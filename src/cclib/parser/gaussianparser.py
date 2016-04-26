@@ -1403,17 +1403,18 @@ class Gaussian(logfileparser.Logfile):
             self.set_attribute('temperature', float(line.split()[1]))
 
         #Extract NMR calculation
-        hasNMR = False
         if "SCF GIAO Magnetic shielding tensor (ppm):" in line:
-            hasNMR = True
             if not hasattr(self, "nmriso"):
                 self.nmriso=[]
             if not hasattr(self, "nmranis"):
                 self.nmranis=[]
 
-        if hasNMR == True and "Isotropic" in line:
-            self.nmriso.append(line.split()[4])
-            self.nmranis.append(line.split()[7])
+            line = next(inputfile)
+            while "Isotropic" in line:
+                self.nmriso.append(line.split()[4])
+                self.nmranis.append(line.split()[7])
+                self.skip_lines(inputfile, ['xx','xy','xz','eigen'])
+                line = next(inputfile)
 
         if "Dipole moment" in line:
             if not hasattr(self, "moments"):
