@@ -233,7 +233,7 @@ class CSX(filewriter.Writer):
         source1 = api.sourcePackageType(name=data.package, version=data.version)
         mp1.set_sourcePackage(source1)
         ath1 = api.authorType(creator='Wang', \
-                type_='gc:corresponding', \
+                type_='gc:CorrespondingAuthor', \
                 organization='default organization', \
                 email='name@organization.com')
         mp1.add_author(ath1)
