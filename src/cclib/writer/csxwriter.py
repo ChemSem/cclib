@@ -268,7 +268,7 @@ class CSX(filewriter.Writer):
                     xCoord3D=xCoord1, \
                     yCoord3D=yCoord1, \
                     zCoord3D=zCoord1, \
-                    basisSet='cs:'+basisName, \
+                    basisSet='bse:'+basisName, \
                     calculatedAtomCharge=atmCharge[iatm], \
                     formalAtomCharge=0)
             mol1.add_atom(atm)
