@@ -101,6 +101,10 @@ class GAMESS(logfileparser.Logfile):
                     self.basisname = "3-21G*"
                 if line.split()[2] == "3" and line.split()[3] == "POLAR=NONE":
                     self.basisname = "3-21G"
+                if line.split()[2] == "4" and line.split()[3] == "POLAR=NONE":
+                    self.basisname = "4-21G"
+                if line.split()[2] == "6" and line.split()[3] == "POLAR=NONE":
+                    self.basisname = "6-21G"
             if basnm1 == "N31" :
                 if line.split()[2] == "6" and (line.split()[3] == "POLAR=POPN31" \
                         or line.split()[3] == "POLAR=POPLE"):
@@ -119,6 +123,10 @@ class GAMESS(logfileparser.Logfile):
                             self.basisname = "6-31G**"
                 if line.split()[2] == "6" and line.split()[3] == "POLAR=NONE":
                     self.basisname = "6-31G"
+                if line.split()[2] == "4" and line.split()[3] == "POLAR=NONE":
+                    self.basisname = "4-31G"
+                if line.split()[2] == "4" and line.split()[3] == "POLAR=POPN31":
+                    self.basisname = "4-31G*"
             if basnm1 == "N311" :
                 if line.split()[2] == "6" and line.split()[3] == "POLAR=POPN311":
                     self.basisname = "6-311G*"
