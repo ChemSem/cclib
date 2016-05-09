@@ -50,6 +50,7 @@ class CSX(filewriter.Writer):
         hasOrbSym = True if (hasattr(data, 'mosyms')) else False
         hasFreq = True if (hasattr(data, 'vibfreqs')) else False
         hasProp = True if (hasattr(data, 'moments')) else False
+        hasPolar = True if (hasattr(data, 'polar')) else False
         hasNMR = True if (hasattr(data, 'nmriso')) else False
         hasElec = True if (hasattr(data, 'etoscs')) else False
         molSpin = data.spintype if (hasattr(data, 'spintype')) else 'RHF'
@@ -171,6 +172,8 @@ class CSX(filewriter.Writer):
                 norms1.add_normalMode(norm1)
             vib1.set_normalModes(norms1)
 
+        if hasProp or hasPolar:
+            prop1 = api.propertiesType()
         #dipole moments information
         if len(data.moments) == 1:
             hasProp = False
@@ -180,7 +183,6 @@ class CSX(filewriter.Writer):
             molDipoleY = data.moments[1][1]
             molDipoleZ = data.moments[1][2]
             molDipoleTot = math.sqrt(molDipoleX*molDipoleX+molDipoleY*molDipoleY+molDipoleZ*molDipoleZ)
-            prop1 = api.propertiesType()
             sprop1 = api.propertyType(name='dipoleMomentX',unit='u:debye',moleculeId='m1')
             sprop1.set_valueOf_(molDipoleX)
             sprop2 = api.propertyType(name='dipoleMomentY',unit='u:debye',moleculeId='m1')
@@ -193,6 +195,24 @@ class CSX(filewriter.Writer):
             prop1.add_systemProperty(sprop2)
             prop1.add_systemProperty(sprop3)
             prop1.add_systemProperty(sprop4)
+        #polarizability information
+        if hasPolar:
+            polarXX = data.polar[0][0]
+            polarYY = data.polar[0][1]
+            polarZZ = data.polar[0][2]
+            polarAvg = (polarXX+polarYY+polarZZ)/3.0
+            sprop5 = api.propertyType(name='polarizabilityXX',unit='u:angstrom3',moleculeId='m1')
+            sprop5.set_valueOf_(polarXX)
+            sprop6 = api.propertyType(name='polarizabilityYY',unit='u:angstrom3',moleculeId='m1')
+            sprop6.set_valueOf_(polarYY)
+            sprop7 = api.propertyType(name='polarizabilityZZ',unit='u:angstrom3',moleculeId='m1')
+            sprop7.set_valueOf_(polarZZ)
+            sprop8 = api.propertyType(name='polarizabilityAverage',unit='u:angstrom3')
+            sprop8.set_valueOf_(polarAvg)
+            prop1.add_systemProperty(sprop5)
+            prop1.add_systemProperty(sprop6)
+            prop1.add_systemProperty(sprop7)
+            prop1.add_systemProperty(sprop8)
         #NMR chemical shielding information
         if hasNMR:
             prop2 = api.propertiesType()
@@ -315,7 +335,7 @@ class CSX(filewriter.Writer):
                     scf1.set_energies(ene1)
                     if hasOrb:
                         scf1.set_waveFunction(wfn1)
-                    if hasProp:
+                    if hasProp or hasPolar:
                         scf1.set_properties(prop1)
                     if hasNMR:
                         scf1.set_properties(prop2)

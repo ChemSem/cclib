@@ -1384,6 +1384,16 @@ class GAMESS(logfileparser.Logfile):
                 line = next(inputfile)
                 self.nmranis.append(line.split()[1])
 
+        #Polarizability section
+        if line.strip() == "ALPHA POLARIZABILITY TENSOR (ANGSTROMS**3)":
+            if not hasattr(self, 'polar'):
+                self.polar=[[]]
+            self.skip_lines(inputfile, ['d', 'b', 'header'])
+            line = next(inputfile)
+            for i in range(3):
+                self.polar[0].append(float(line.split()[1+i]))
+                line = next(inputfile)
+
         
 if __name__ == "__main__":
     import doctest, gamessparser, sys

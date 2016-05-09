@@ -131,6 +131,7 @@ class ccData(object):
         "nooccnos":       numpy.ndarray,
         "optdone":        bool,
         "package":        str,
+        "polar":          list,
         "scancoords":     numpy.ndarray,
         "scanenergies":   list,
         "scannames":      list,
