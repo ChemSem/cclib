@@ -221,7 +221,7 @@ class CSX(filewriter.Writer):
                         name='nmrShieldingIsotropic',unit='u:ppm')
                 aprop1.set_valueOf_(data.nmriso[iatm])
                 aprop2 = api.propertyType(atomId='a'+str(iatm+1), moleculeId='m1', \
-                        name='nmrShieldingAnisotropic',unit='u:ppm')
+                        name='nmrShieldingAnisotropy',unit='u:ppm')
                 aprop2.set_valueOf_(data.nmranis[iatm])
                 prop2.add_atomProperty(aprop1)
                 prop2.add_atomProperty(aprop2)
@@ -302,7 +302,8 @@ class CSX(filewriter.Writer):
         mc1 = api.mcalType(id='c1')
         qm1 = api.qmCalcType()
         if calcType in mr_wfn_method:
-            mrs1 = api.mrsmdMethodType()
+            mrs1 = api.mrsMethodType()
+            mrsmd1 = api.mrsmdMethodType()
             if calcType == 'GVB':
                 gvb1 = api.resultType(methodology='gc:normal', spinType='gc:'+molSpin, \
                         basisSet='bse:'+basisName, pairCount='2')
@@ -311,6 +312,7 @@ class CSX(filewriter.Writer):
                 ee_ene1.set_valueOf_(float(molEE))
                 ene1.add_energy(ee_ene1)
                 gvb1.set_energies(ene1)
+                mrsmd1.set_gvb(gvb1)
             elif calcType == 'CASSCF':
                 casscf1  = api.resultType(methodology='gc:normal', spinType='gc:'+molSpin, \
                         basisSet='bse:'+basisName)
@@ -319,6 +321,8 @@ class CSX(filewriter.Writer):
                 ee_ene1.set_valueOf_(float(molEE))
                 ene1.add_energy(ee_ene1)
                 casscf1.set_energies(ene1)
+                mrsmd1.set_casscf(casscf1)
+            mrs1.set_multipleDeterminant(mrsmd1)
             qm1.set_multipleReferenceState(mrs1)
         else:
             srs1 = api.srsMethodType()
@@ -455,7 +459,7 @@ class CSX(filewriter.Writer):
                         ccsd_t1.set_properties(prop2)
                     if hasFreq:
                         ccsd_t1.set_vibrationalAnalysis(vib1)
-                    mdm1.set_ccsd(ccsd_t1)
+                    mdm1.set_ccsd-t(ccsd_t1)
                 else:
                     print ('The current CSX does not support this method')
                 srs1.set_multipleDeterminant(mdm1)

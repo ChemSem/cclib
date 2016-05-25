@@ -78,7 +78,10 @@ class GAMESS(logfileparser.Logfile):
 
 #theory level
         if line[1:7] == "SCFTYP" and not hasattr(self, "theory"):
-            self.theory = line.split()[0][-2:]
+            if line.split()[0][-3:] == "GVB":
+                self.theory = line.split()[0][-3:]
+            else:
+                self.theory = line.split()[0][-2:]
         if line[1:7] == "DFTTYP" and line[8:12] != "NONE":
             self.theory = "DFT"
             self.functional = line.split()[0][7:]
