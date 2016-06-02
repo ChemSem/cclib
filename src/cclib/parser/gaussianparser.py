@@ -203,6 +203,15 @@ class Gaussian(logfileparser.Logfile):
         # Basis Name
         if line[1:15] == "Standard basis":
             basisname = line.split()[2]
+            if basisname == "6-31G(d)":
+                basisname = "6-31G*"
+            if basisname == "6-311G(d)":
+                basisname = "6-311G*"
+            if basisname == "6-31G(d,p)":
+                basisname = "6-31G**"
+            if basisname == "6-311G(d,p)":
+                basisname = "6-311G**"
+
             if not hasattr(self, "basisname"):
                 self.basisname = basisname
 
