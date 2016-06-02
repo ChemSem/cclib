@@ -72,6 +72,11 @@ class CSX(filewriter.Writer):
                 orbOcc = []
                 if hasOrbSym:
                     orbSym = data.mosyms
+                    for x in orbSym[0]:
+                        if '\"' in x:
+                            xindex = orbSym[0].index(x)
+                            x = x[:-1]+'\''+'\''
+                            orbSym[0][xindex] = x
                     orbSymString = ' '.join( x for x in orbSym[0])
                 for iorb in range (orbNum):
                     if molSpin == "ROHF":
