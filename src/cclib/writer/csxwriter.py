@@ -304,7 +304,7 @@ class CSX(filewriter.Writer):
         sd_wfn_method = ['HF', 'DFT', 'MP2', 'MP3', 'MP4', 'AM1', 'PM3', 'PM6']
         md_wfn_method = ['CCD', 'CCSD', 'CCSD-T', 'CIS', 'CISD', 'FCI', 'QCISD', 'QCISD-T']
         mr_wfn_method = ['CASSCF', 'CASPT2', 'RASSCF', 'RASPT2', 'GVB', 'MCSCF', 'MRCC', 'MRCI']
-        mc1 = api.mcalType(id='c1')
+        mc1 = api.mcalType(id='c1', inputsystem='s1')
         qm1 = api.qmCalcType()
         if calcType in mr_wfn_method:
             mrs1 = api.mrsMethodType()
