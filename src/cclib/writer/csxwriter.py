@@ -94,7 +94,7 @@ class CSX(filewriter.Writer):
                         orbitalOccupancies=orbOccString)
                 if hasOrbSym:
                     wfn1.set_orbitalSymmetry(orbSymString)
-                orbe1 = api.stringArrayType(unit='u:eV')
+                orbe1 = api.stringArrayType(unit='u:ElectronVolt')
                 orbe1.set_valueOf_(orbEString)
                 orbs1 = api.orbitalsType()
                 for orbArray in data.mocoeffs:
@@ -125,7 +125,7 @@ class CSX(filewriter.Writer):
                 orbCbSym = data.mosyms[1][:]
                 orbCbSymString = ' '.join( x for x in orbCbSym)
                 wfn1 = api.waveFunctionType(orbitalCount=orbNum)
-                orbe1 = api.stringArrayType(unit='u:eV')
+                orbe1 = api.stringArrayType(unit='u:ElectronVolt')
                 orbe1.set_valueOf_(orbCaEString)
                 orbs1 = api.orbitalsType()
                 alphaOrb = data.mocoeffs[0][:]
@@ -138,7 +138,7 @@ class CSX(filewriter.Writer):
                 wfn1.set_alphaOrbitalEnergies(orbe1)
                 wfn1.set_alphaOrbitalOccupancies(orbCaOccString)
                 wfn1.set_alphaOrbitalSymmetry(orbCaSymString)
-                orbe2 = api.stringArrayType(unit='u:eV')
+                orbe2 = api.stringArrayType(unit='u:ElectronVolt')
                 orbe2.set_valueOf_(orbCbEString)
                 orbs2 = api.orbitalsType()
                 betaOrb = data.mocoeffs[1][:]
@@ -158,7 +158,7 @@ class CSX(filewriter.Writer):
             frqString = ' '.join(str(x) for x in data.vibfreqs)
             intString = ' '.join(str(x) for x in data.vibirs)
             vib1 = api.vibAnalysisType(vibrationCount=molFreqNum)
-            freq1 = api.stringArrayType(unit="u:cm-1")
+            freq1 = api.stringArrayType(unit="gc:RecipricalCentimeter")
             freq1.set_valueOf_(frqString)
             vib1.set_frequencies(freq1)
             irint1 = api.stringArrayType()
@@ -188,13 +188,13 @@ class CSX(filewriter.Writer):
             molDipoleY = data.moments[1][1]
             molDipoleZ = data.moments[1][2]
             molDipoleTot = math.sqrt(molDipoleX*molDipoleX+molDipoleY*molDipoleY+molDipoleZ*molDipoleZ)
-            sprop1 = api.propertyType(name='dipoleMomentX',unit='u:debye',moleculeId='m1')
+            sprop1 = api.propertyType(name='dipoleMomentX',unit='u:Debye',moleculeId='m1')
             sprop1.set_valueOf_(molDipoleX)
-            sprop2 = api.propertyType(name='dipoleMomentY',unit='u:debye',moleculeId='m1')
+            sprop2 = api.propertyType(name='dipoleMomentY',unit='u:Debye',moleculeId='m1')
             sprop2.set_valueOf_(molDipoleY)
-            sprop3 = api.propertyType(name='dipoleMomentZ',unit='u:debye',moleculeId='m1')
+            sprop3 = api.propertyType(name='dipoleMomentZ',unit='u:Debye',moleculeId='m1')
             sprop3.set_valueOf_(molDipoleZ)
-            sprop4 = api.propertyType(name='dipoleMomentAverage',unit='u:debye')
+            sprop4 = api.propertyType(name='dipoleMomentAverage',unit='u:Debye')
             sprop4.set_valueOf_(molDipoleTot)
             prop1.add_systemProperty(sprop1)
             prop1.add_systemProperty(sprop2)
@@ -206,13 +206,13 @@ class CSX(filewriter.Writer):
             polarYY = data.polar[0][1]
             polarZZ = data.polar[0][2]
             polarAvg = (polarXX+polarYY+polarZZ)/3.0
-            sprop5 = api.propertyType(name='polarizabilityXX',unit='u:angstrom3',moleculeId='m1')
+            sprop5 = api.propertyType(name='polarizabilityXX',unit='u:Angstrom3',moleculeId='m1')
             sprop5.set_valueOf_(polarXX)
-            sprop6 = api.propertyType(name='polarizabilityYY',unit='u:angstrom3',moleculeId='m1')
+            sprop6 = api.propertyType(name='polarizabilityYY',unit='u:Angstrom3',moleculeId='m1')
             sprop6.set_valueOf_(polarYY)
-            sprop7 = api.propertyType(name='polarizabilityZZ',unit='u:angstrom3',moleculeId='m1')
+            sprop7 = api.propertyType(name='polarizabilityZZ',unit='u:Angstrom3',moleculeId='m1')
             sprop7.set_valueOf_(polarZZ)
-            sprop8 = api.propertyType(name='polarizabilityAverage',unit='u:angstrom3')
+            sprop8 = api.propertyType(name='polarizabilityAverage',unit='u:Angstrom3')
             sprop8.set_valueOf_(polarAvg)
             prop1.add_systemProperty(sprop5)
             prop1.add_systemProperty(sprop6)
@@ -223,10 +223,10 @@ class CSX(filewriter.Writer):
             prop2 = api.propertiesType()
             for iatm in range(atomNum):
                 aprop1 = api.propertyType(atomId='a'+str(iatm+1), moleculeId='m1', \
-                        name='nmrShieldingIsotropic',unit='u:ppm')
+                        name='nmrShieldingIsotropic',unit='gc:PartsPerMillion')
                 aprop1.set_valueOf_(data.nmriso[iatm])
                 aprop2 = api.propertyType(atomId='a'+str(iatm+1), moleculeId='m1', \
-                        name='nmrShieldingAnisotropy',unit='u:ppm')
+                        name='nmrShieldingAnisotropy',unit='gc:PartsPerMillion')
                 aprop2.set_valueOf_(data.nmranis[iatm])
                 prop2.add_atomProperty(aprop1)
                 prop2.add_atomProperty(aprop2)
@@ -236,7 +236,7 @@ class CSX(filewriter.Writer):
             transStr = ' '.join(str(x) for x in data.etenergies)
             oscilStr = ' '.join(str(x) for x in data.etoscs)
             elec1 = api.elecSpectraType(transitionCount=len(data.etenergies))
-            trans1 = api.stringArrayType(unit="u:cm-1")
+            trans1 = api.stringArrayType(unit="gc:RecipricalCentimeter")
             trans1.set_valueOf_(transStr)
             oscil1 = api.stringArrayType()
             oscil1.set_valueOf_(oscilStr)
@@ -267,7 +267,7 @@ class CSX(filewriter.Writer):
         #molecular system section
         ms1 = api.msysType(systemCharge=molCharge, \
                systemMultiplicity=molMulti, id='s1')
-        temp1 = api.dataWithUnitsType(unit='u:kelvin')
+        temp1 = api.dataWithUnitsType(unit='u:Kelvin')
         temp1.set_valueOf_(0.0)
         ms1.set_systemTemperature(temp1)
         mol1 = api.moleculeType(id='m1',atomCount=atomNum)
@@ -281,11 +281,11 @@ class CSX(filewriter.Writer):
             xCoord = data.atomcoords[-1,iatm,0]
             yCoord = data.atomcoords[-1,iatm,1]
             zCoord = data.atomcoords[-1,iatm,2]
-            xCoord1 = api.dataWithUnitsType(unit='u:angstrom')
+            xCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
             xCoord1.set_valueOf_(xCoord)
-            yCoord1 = api.dataWithUnitsType(unit='u:angstrom')
+            yCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
             yCoord1.set_valueOf_(yCoord)
-            zCoord1 = api.dataWithUnitsType(unit='u:angstrom')
+            zCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
             zCoord1.set_valueOf_(zCoord)
             atomicNum = data.atomnos[iatm]
             atm = api.atomType(id='a'+str(iatm+1), elementSymbol=chemElement.z2elm[atomicNum], \
@@ -312,7 +312,7 @@ class CSX(filewriter.Writer):
             if calcType == 'GVB':
                 gvb1 = api.resultType(methodology='gc:normal', spinType='gc:'+molSpin, \
                         basisSet='bse:'+basisName, pairCount='2')
-                ene1 = api.energiesType(unit='u:eV')
+                ene1 = api.energiesType(unit='u:ElectronVolt')
                 ee_ene1 = api.energyType(type_='gc:totalPotential')
                 ee_ene1.set_valueOf_(float(molEE))
                 ene1.add_energy(ee_ene1)
@@ -321,7 +321,7 @@ class CSX(filewriter.Writer):
             elif calcType == 'CASSCF':
                 casscf1  = api.resultType(methodology='gc:normal', spinType='gc:'+molSpin, \
                         basisSet='bse:'+basisName)
-                ene1 = api.energiesType(unit='u:eV')
+                ene1 = api.energiesType(unit='u:ElectronVolt')
                 ee_ene1 = api.energyType(type_='gc:totalPotential')
                 ee_ene1.set_valueOf_(float(molEE))
                 ene1.add_energy(ee_ene1)
@@ -337,7 +337,7 @@ class CSX(filewriter.Writer):
                 if (calcType == 'HF'):
                     scf1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
                             basisSet='bse:'+basisName)
-                    ene1 = api.energiesType(unit='u:eV')
+                    ene1 = api.energiesType(unit='u:ElectronVolt')
                     ee_ene1 = api.energyType(type_='gc:totalPotential')
                     ee_ene1.set_valueOf_(float(molEE))
                     ene1.add_energy(ee_ene1)
@@ -361,7 +361,7 @@ class CSX(filewriter.Writer):
                     else:
                         dft1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
                                 basisSet='bse:'+basisName, dftFunctional='gc:'+data.functional)
-                    ene1 = api.energiesType(unit='u:eV')
+                    ene1 = api.energiesType(unit='u:ElectronVolt')
                     ee_ene1 = api.energyType(type_='gc:totalPotential')
                     ee_ene1.set_valueOf_(float(molEE))
                     ene1.add_energy(ee_ene1)
@@ -381,7 +381,7 @@ class CSX(filewriter.Writer):
                 elif (calcType == 'MP2'):
                     mp21 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
                             basisSet='bse:'+basisName)
-                    ene1 = api.energiesType(unit='u:eV')
+                    ene1 = api.energiesType(unit='u:ElectronVolt')
                     ee_ene1 = api.energyType(type_='gc:totalPotential')
                     ee_ene1.set_valueOf_(float(data.mpenergies[-1]))
                     ce_ene1 = api.energyType(type_='gc:correlation')
@@ -401,7 +401,7 @@ class CSX(filewriter.Writer):
                 #Semiempirical methods
                 elif (calcType == 'AM1' or calcType == 'PM3' or calcType == 'PM6'):
                     sem1 = api.resultType(methodology=calcType,spinType='gc:'+molSpin)
-                    ene1 = api.energiesType(unit='u:eV')
+                    ene1 = api.energiesType(unit='u:ElectronVolt')
                     ee_ene1 = api.energyType(type_='gc:totalPotential')
                     ee_ene1.set_valueOf_(float(molEE))
                     hof_ene1 = api.energyType(type_='gc:heatofformation')
@@ -428,7 +428,7 @@ class CSX(filewriter.Writer):
                 if (calcType == 'CCSD'):
                     ccsd1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
                             basisSet='bse:'+basisName)
-                    ene1 = api.energiesType(unit='u:eV')
+                    ene1 = api.energiesType(unit='u:ElectronVolt')
                     ee_ene1 = api.energyType(type_='gc:totalPotential')
                     ee_ene1.set_valueOf_(float(data.ccenergies[0]))
                     ce_ene1 = api.energyType(type_='gc:correlation')
@@ -448,7 +448,7 @@ class CSX(filewriter.Writer):
                 elif (calcType == 'CCSD-T'):
                     ccsd_t1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
                             basisSet='bse:'+basisName)
-                    ene1 = api.energiesType(unit='u:eV')
+                    ene1 = api.energiesType(unit='u:ElectronVolt')
                     ee_ene1 = api.energyType(type_='gc:totalPotential')
                     ee_ene1.set_valueOf_(float(data.ccenergies[-1]))
                     ce_ene1 = api.energyType(type_='gc:correlation')
