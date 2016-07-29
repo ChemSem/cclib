@@ -173,6 +173,15 @@ class GAMESS(logfileparser.Logfile):
         if line [1:12] == "INPUT CARD>":
             return
 
+        #IRC
+        if line.strip() == "INTRINSIC REACTION COORDINATE":
+            while line.strip():
+                if "NPOINT" in line:
+                    if not hasattr(self, "ircpnt"):
+                        self.ircpnt = line.split()[-1]
+                line = next(inputfile)
+
+
         # We are looking for this line:
         #           PARAMETERS CONTROLLING GEOMETRY SEARCH ARE
         #           ...
@@ -191,6 +200,14 @@ class GAMESS(logfileparser.Logfile):
                 self.scfenergies = []
             temp = line.split()
             self.scfenergies.append(utils.convertor(float(temp[temp.index("IS") + 1]), "hartree", "eV"))
+        if hasattr(self, "ircpnt") and "END OF CONSTRAINED OPTIMIZATION" in line:
+            if not hasattr(self, "ircenergies"):
+                self.ircenergies = []
+            self.ircenergies.append(self.scfenergies[-1])
+        if "AT PATH DISTANCE STOTAL" in line:
+            if not hasattr(self, "irccoords"):
+                self.irccoords = []
+            self.irccoords.append(line.split()[-2])
         # heat of formation for semiempirical methods
         if "HEAT OF FORMATION IS" in line:
             if not hasattr(self, "hofenergies"):
@@ -566,7 +583,8 @@ class GAMESS(logfileparser.Logfile):
             if self.firststdorient:
                 self.firststdorient = False
                 # Wipes out the single input coordinate at the start of the file
-                self.atomcoords = []
+                if not hasattr(self, 'ircpnt'):
+                    self.atomcoords = []
                 
             self.skip_lines(inputfile, ['line', '-'])
 

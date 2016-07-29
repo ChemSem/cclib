@@ -50,6 +50,9 @@ class ccData(object):
         hessian -- elements of the force constant matrix (array[1])
         hofenergies -- heat of formation after semiempirical calculation (array[1], eV)
         homos -- molecular orbital indices of HOMO(s) (array[1])
+        ircpnt -- the intrinsic reaction coordinate points (integer)
+        ircenergies -- the molecular energies for intrinsic reaction coordinate (array[1], eV)
+        irccoords -- the reaction coordinates for IRC (array[1])
         mocoeffs -- molecular orbital coefficients (list of arrays[2])
         moenergies -- molecular orbital energies (list of arrays[1], eV)
         moments -- molecular multipole moments (list of arrays[], a.u.)
@@ -116,6 +119,9 @@ class ccData(object):
         "hessian":        numpy.ndarray,
         "hofenergies":    numpy.ndarray,
         "homos":          numpy.ndarray,
+        "ircpnt":         int,
+        "ircenergies":    numpy.ndarray,
+        "irccoords":      numpy.ndarray,
         "mocoeffs":       list,
         "moenergies":     list,
         "moments":        list,

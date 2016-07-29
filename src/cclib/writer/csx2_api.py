@@ -763,10 +763,10 @@ class csType(GeneratedsSuper):
             self.molecularPublication.export(outfile, level, namespace_, name_='molecularPublication', pretty_print=pretty_print)
         for molecularCollection_ in self.molecularCollection:
             molecularCollection_.export(outfile, level, namespace_, name_='molecularCollection', pretty_print=pretty_print)
-        if self.molecularSystem is not None:
-            self.molecularSystem.export(outfile, level, namespace_, name_='molecularSystem', pretty_print=pretty_print)
-        if self.molecularCalculation is not None:
-            self.molecularCalculation.export(outfile, level, namespace_, name_='molecularCalculation', pretty_print=pretty_print)
+        for molecularSystem_ in self.molecularSystem:
+            molecularSystem_.export(outfile, level, namespace_, name_='molecularSystem', pretty_print=pretty_print)
+        for molecularCalculation_ in self.molecularCalculation:
+            molecularCalculation_.export(outfile, level, namespace_, name_='molecularCalculation', pretty_print=pretty_print)
     def build(self, node):
         already_processed = set()
         self.buildAttributes(node, node.attrib, already_processed)
@@ -1821,7 +1821,7 @@ class mcolType(GeneratedsSuper):
             return True
         else:
             return False
-    def export(self, outfile, level, namespace_='cs:', name_='mcolType', namespacedef_='xmlns:cs="http://chemicalsemantics.com/csx" xmlns:dcterms="http://purl.org/dc/terms/" ', pretty_print=True):
+    def export(self, outfile, level, namespace_='cs:', name_='mcolType', namespacedef_='', pretty_print=True):
         if pretty_print:
             eol_ = '\n'
         else:
@@ -1850,7 +1850,9 @@ class mcolType(GeneratedsSuper):
             showIndent(outfile, level, pretty_print)
             outfile.write('<%stype>%s</%stype>%s' % (namespace_, self.gds_encode(self.gds_format_string(quote_xml(self.type_), input_name='type')), namespace_, eol_))
         if self.description is not None:
-            self.description.export(outfile, level, namespace_='dcterms:', name_='description', pretty_print=pretty_print)
+            namespace1_='dcterms:'
+            showIndent(outfile, level, pretty_print)
+            outfile.write('<%sdescription>%s</%sdescription>%s' % (namespace1_, self.gds_encode(self.gds_format_string(quote_xml(self.description), input_name='description')), namespace1_, eol_))
         for entry_ in self.entry:
             entry_.export(outfile, level, namespace_, name_='entry', pretty_print=pretty_print)
         if self.results is not None:
@@ -1986,7 +1988,7 @@ class entryType(GeneratedsSuper):
             return True
         else:
             return False
-    def export(self, outfile, level, namespace_='cs:', name_='entryType', namespacedef_='xmlns:cs="http://chemicalsemantics.com/csx" xmlns:dcterms="http://purl.org/dc/terms/" ', pretty_print=True):
+    def export(self, outfile, level, namespace_='cs:', name_='entryType', namespacedef_='', pretty_print=True):
         if pretty_print:
             eol_ = '\n'
         else:
@@ -2019,10 +2021,10 @@ class entryType(GeneratedsSuper):
             parameter_.export(outfile, level, namespace_, name_='parameter', pretty_print=pretty_print)
         for item_ in self.item:
             item_.export(outfile, level, namespace_, name_='item', pretty_print=pretty_print)
-        for system_ in self.system:
-            system_.export(outfile, level, namespace_, name_='system', pretty_print=pretty_print)
-        for calculation_ in self.calculation:
-            calculation_.export(outfile, level, namespace_, name_='calculation', pretty_print=pretty_print)
+        if self.system is not None:
+            self.system.export(outfile, level, namespace_='cs:', name_='system', pretty_print=pretty_print)
+        if self.calculation is not None:
+            self.calculation.export(outfile, level, namespace_='cs:', name_='calculation', pretty_print=pretty_print)
         for result_ in self.result:
             result_.export(outfile, level, namespace_, name_='result', pretty_print=pretty_print)
     def build(self, node):

@@ -53,6 +53,7 @@ class CSX(filewriter.Writer):
         hasPolar = True if (hasattr(data, 'polar')) else False
         hasNMR = True if (hasattr(data, 'nmriso')) else False
         hasElec = True if (hasattr(data, 'etoscs')) else False
+        hasCollection = True if (hasattr(data, 'ircpnt')) else False
         molSpin = data.spintype if (hasattr(data, 'spintype')) else 'RHF'
         if molMulti == 1 :
             wfnRestricted = True
@@ -264,213 +265,407 @@ class CSX(filewriter.Writer):
         mp1.add_author(ath1)
         cs1.set_molecularPublication(mp1)
 
-        #molecular system section
-        ms1 = api.msysType(systemCharge=molCharge, \
-               systemMultiplicity=molMulti, id='s1')
-        temp1 = api.dataWithUnitsType(unit='u:Kelvin')
-        temp1.set_valueOf_(0.0)
-        ms1.set_systemTemperature(temp1)
-        mol1 = api.moleculeType(id='m1',atomCount=atomNum)
-        if hasattr(data, "atomcharges"):
-            atmCharge = data.atomcharges["mulliken"]
-        else:
-            atmCharge = [0]*atomNum
-        #obmol1 = openbabel.OBMol()
-        for iatm in range(atomNum):
-            #   xCoord = float(data.atomcoords[iatm,0])
-            xCoord = data.atomcoords[-1,iatm,0]
-            yCoord = data.atomcoords[-1,iatm,1]
-            zCoord = data.atomcoords[-1,iatm,2]
-            xCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
-            xCoord1.set_valueOf_(xCoord)
-            yCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
-            yCoord1.set_valueOf_(yCoord)
-            zCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
-            zCoord1.set_valueOf_(zCoord)
-            atomicNum = data.atomnos[iatm]
-            atm = api.atomType(id='a'+str(iatm+1), elementSymbol=chemElement.z2elm[atomicNum], \
-                    atomMass=chemElement.z2mass[atomicNum], \
-                    xCoord3D=xCoord1, \
-                    yCoord3D=yCoord1, \
-                    zCoord3D=zCoord1, \
-                    basisSet='bse:'+basisName, \
-                    calculatedAtomCharge=atmCharge[iatm], \
-                    formalAtomCharge=0)
-            mol1.add_atom(atm)
-        ms1.add_molecule(mol1)
-        cs1.set_molecularSystem(ms1)
+        if hasCollection:
+            mc1 = api.mcolType(type_='IRC', description='Internal Reaction Coordinates')
+            ircpnt = int(data.ircpnt)
+            if ( ircpnt != len(data.ircenergies) ):
+                ircpnt = len(data.ircenergies)-1
+            for ipnt in range(ircpnt):
+                entry1 = api.entryType(id='pnt'+str(ipnt+1))
+                param1 = api.propertyType(id='pnt'+str(ipnt+1)+'prm1', name='reaction coordinates')
+                param1.set_valueOf_(data.irccoords[ipnt])
+                entry1.add_parameter(param1)
+                sys1 = api.itemType(ref='s'+str(ipnt+1))
+                calc1 = api.itemType(ref='c'+str(ipnt+1))
+                res1 = api.resType(id='pnt'+str(ipnt+1)+'r1', \
+                        name='total electronic energy for point'+str(ipnt))
+                val1 = api.valType(ref='e'+str(ipnt+1)+'_'+'total_energy')
+                res1.add_value(val1)
+                entry1.add_result(res1)
+                entry1.set_system(sys1)
+                entry1.set_calculation(calc1)
+                mc1.add_entry(entry1)
+            cs1.add_molecularCollection(mc1)
 
-        #molCalculation section
-        sd_wfn_method = ['HF', 'DFT', 'MP2', 'MP3', 'MP4', 'AM1', 'PM3', 'PM6']
-        md_wfn_method = ['CCD', 'CCSD', 'CCSD-T', 'CIS', 'CISD', 'FCI', 'QCISD', 'QCISD-T']
-        mr_wfn_method = ['CASSCF', 'CASPT2', 'RASSCF', 'RASPT2', 'GVB', 'MCSCF', 'MRCC', 'MRCI']
-        mc1 = api.mcalType(id='c1', inputsystem='s1')
-        qm1 = api.qmCalcType()
-        if calcType in mr_wfn_method:
-            mrs1 = api.mrsMethodType()
-            mrsmd1 = api.mrsmdMethodType()
-            if calcType == 'GVB':
-                gvb1 = api.resultType(methodology='gc:normal', spinType='gc:'+molSpin, \
-                        basisSet='bse:'+basisName, pairCount='2')
-                ene1 = api.energiesType(unit='u:ElectronVolt')
-                ee_ene1 = api.energyType(type_='gc:totalPotential')
-                ee_ene1.set_valueOf_(float(molEE))
-                ene1.add_energy(ee_ene1)
-                gvb1.set_energies(ene1)
-                mrsmd1.set_gvb(gvb1)
-            elif calcType == 'CASSCF':
-                casscf1  = api.resultType(methodology='gc:normal', spinType='gc:'+molSpin, \
-                        basisSet='bse:'+basisName)
-                ene1 = api.energiesType(unit='u:ElectronVolt')
-                ee_ene1 = api.energyType(type_='gc:totalPotential')
-                ee_ene1.set_valueOf_(float(molEE))
-                ene1.add_energy(ee_ene1)
-                casscf1.set_energies(ene1)
-                mrsmd1.set_casscf(casscf1)
-            mrs1.set_multipleDeterminant(mrsmd1)
-            qm1.set_multipleReferenceState(mrs1)
-        else:
-            srs1 = api.srsMethodType()
-            if calcType in sd_wfn_method:
-                sdm1 = api.srssdMethodType()
-                #SCF
-                if (calcType == 'HF'):
-                    scf1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
-                            basisSet='bse:'+basisName)
-                    ene1 = api.energiesType(unit='u:ElectronVolt')
-                    ee_ene1 = api.energyType(type_='gc:totalPotential')
-                    ee_ene1.set_valueOf_(float(molEE))
-                    ene1.add_energy(ee_ene1)
-                    scf1.set_energies(ene1)
-                    if hasOrb:
-                        scf1.set_waveFunction(wfn1)
-                    if hasProp or hasPolar:
-                        scf1.set_properties(prop1)
-                    if hasNMR:
-                        scf1.set_properties(prop2)
-                    if hasFreq:
-                        scf1.set_vibrationalAnalysis(vib1)
-                    if hasElec:
-                        scf1.set_electronicSpectra(elec1)
-                    sdm1.set_abinitioScf(scf1)
-                #DFT
-                elif (calcType == 'DFT'):
-                    if hasElec:
-                        dft1 = api.resultType(methodology='gc:tddft',spinType='gc:'+molSpin, \
-                                basisSet='bse:'+basisName, dftFunctional='gc:'+data.functional)
+            for ipnt in range(ircpnt+1):
+                #molecular system section
+                msys = api.msysType(systemCharge=molCharge, \
+                        systemMultiplicity=molMulti, id='s'+str(ipnt))
+                temp1 = api.dataWithUnitsType(unit='u:Kelvin')
+                temp1.set_valueOf_(0.0)
+                msys.set_systemTemperature(temp1)
+                if ipnt == 0:
+                    mol = api.moleculeType(id='m1',atomCount=atomNum)
+                else:
+                    mol = api.moleculeType(ref='m1',atomCount=atomNum)
+                if hasattr(data, "atomcharges"):
+                    atmCharge = data.atomcharges["mulliken"]
+                else:
+                    atmCharge = [0]*atomNum
+                for iatm in range(atomNum):
+                    #   xCoord = float(data.atomcoords[iatm,0])
+                    xCoord = data.atomcoords[ipnt,iatm,0]
+                    yCoord = data.atomcoords[ipnt,iatm,1]
+                    zCoord = data.atomcoords[ipnt,iatm,2]
+                    xCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
+                    xCoord1.set_valueOf_(xCoord)
+                    yCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
+                    yCoord1.set_valueOf_(yCoord)
+                    zCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
+                    zCoord1.set_valueOf_(zCoord)
+                    atomicNum = data.atomnos[iatm]
+                    if ipnt == 0:
+                        atm = api.atomType(id='a'+str(iatm+1), elementSymbol=chemElement.z2elm[atomicNum], \
+                                atomMass=chemElement.z2mass[atomicNum], \
+                                xCoord3D=xCoord1, \
+                                yCoord3D=yCoord1, \
+                                zCoord3D=zCoord1, \
+                                basisSet='bse:'+basisName, \
+                                calculatedAtomCharge=atmCharge[iatm], \
+                                formalAtomCharge=0)
                     else:
-                        dft1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
-                                basisSet='bse:'+basisName, dftFunctional='gc:'+data.functional)
+                        atm = api.atomType(ref='a'+str(iatm+1), elementSymbol=chemElement.z2elm[atomicNum], \
+                                atomMass=chemElement.z2mass[atomicNum], \
+                                xCoord3D=xCoord1, \
+                                yCoord3D=yCoord1, \
+                                zCoord3D=zCoord1, \
+                                basisSet='bse:'+basisName, \
+                                calculatedAtomCharge=atmCharge[iatm], \
+                                formalAtomCharge=0)
+                    mol.add_atom(atm)
+                msys.add_molecule(mol)
+                cs1.add_molecularSystem(msys)
+
+            for ipnt in range(ircpnt):
+                #molCalculation section
+                sd_wfn_method = ['HF', 'DFT', 'MP2', 'MP3', 'MP4', 'AM1', 'PM3', 'PM6']
+                md_wfn_method = ['CCD', 'CCSD', 'CCSD-T', 'CIS', 'CISD', 'FCI', 'QCISD', 'QCISD-T']
+                mr_wfn_method = ['CASSCF', 'CASPT2', 'RASSCF', 'RASPT2', 'GVB', 'MCSCF', 'MRCC', 'MRCI']
+                mc1 = api.mcalType(id='c'+str(ipnt+1), inputsystem='s'+str(ipnt), \
+                        outputsystem='s'+str(ipnt+1))
+                qm1 = api.qmCalcType()
+                if calcType in mr_wfn_method:
+                    mrs1 = api.mrsMethodType()
+                    mrsmd1 = api.mrsmdMethodType()
+                    if calcType == 'GVB':
+                        gvb1 = api.resultType(methodology='gc:normal', spinType='gc:'+molSpin, \
+                                basisSet='bse:'+basisName, pairCount='2')
+                        ene1 = api.energiesType(unit='u:ElectronVolt')
+                        ee_ene1 = api.energyType(type_='gc:totalPotential')
+                        ee_ene1.set_valueOf_(float(molEE))
+                        ene1.add_energy(ee_ene1)
+                        gvb1.set_energies(ene1)
+                        mrsmd1.set_gvb(gvb1)
+                    elif calcType == 'CASSCF':
+                        casscf1  = api.resultType(methodology='gc:normal', spinType='gc:'+molSpin, \
+                                basisSet='bse:'+basisName)
+                        ene1 = api.energiesType(unit='u:ElectronVolt')
+                        ee_ene1 = api.energyType(type_='gc:totalPotential')
+                        ee_ene1.set_valueOf_(float(molEE))
+                        ene1.add_energy(ee_ene1)
+                        casscf1.set_energies(ene1)
+                        mrsmd1.set_casscf(casscf1)
+                    mrs1.set_multipleDeterminant(mrsmd1)
+                    qm1.set_multipleReferenceState(mrs1)
+                else:
+                    srs1 = api.srsMethodType()
+                    if calcType in sd_wfn_method:
+                        sdm1 = api.srssdMethodType()
+                        #SCF
+                        if (calcType == 'HF'):
+                            scf1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                    basisSet='bse:'+basisName)
+                            ene1 = api.energiesType(unit='u:ElectronVolt')
+                            ee_ene1 = api.energyType(id='e'+str(ipnt+1)+'_'+'total_energy', \
+                                    type_='gc:totalPotential')
+                            ee_ene1.set_valueOf_(float(data.ircenergies[ipnt]))
+                            ene1.add_energy(ee_ene1)
+                            scf1.set_energies(ene1)
+                            sdm1.set_abinitioScf(scf1)
+                        #DFT
+                        elif (calcType == 'DFT'):
+                            if hasElec:
+                                dft1 = api.resultType(methodology='gc:tddft',spinType='gc:'+molSpin, \
+                                        basisSet='bse:'+basisName, dftFunctional='gc:'+data.functional)
+                            else:
+                                dft1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                        basisSet='bse:'+basisName, dftFunctional='gc:'+data.functional)
+                            ene1 = api.energiesType(unit='u:ElectronVolt')
+                            ee_ene1 = api.energyType(type_='gc:totalPotential')
+                            ee_ene1.set_valueOf_(float(molEE))
+                            ene1.add_energy(ee_ene1)
+                            dft1.set_energies(ene1)
+                            sdm1.set_dft(dft1)
+                        #MP2
+                        elif (calcType == 'MP2'):
+                            mp21 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                    basisSet='bse:'+basisName)
+                            ene1 = api.energiesType(unit='u:ElectronVolt')
+                            ee_ene1 = api.energyType(type_='gc:totalPotential')
+                            ee_ene1.set_valueOf_(float(data.mpenergies[-1]))
+                            ce_ene1 = api.energyType(type_='gc:correlation')
+                            ce_ene1.set_valueOf_(float(data.mpenergies[-1])-float(molEE))
+                            ene1.add_energy(ee_ene1)
+                            ene1.add_energy(ce_ene1)
+                            mp21.set_energies(ene1)
+                            sdm1.set_mp2(mp21)
+                        #Semiempirical methods
+                        elif (calcType == 'AM1' or calcType == 'PM3' or calcType == 'PM6'):
+                            sem1 = api.resultType(methodology=calcType,spinType='gc:'+molSpin)
+                            ene1 = api.energiesType(unit='u:ElectronVolt')
+                            ee_ene1 = api.energyType(type_='gc:totalPotential')
+                            ee_ene1.set_valueOf_(float(molEE))
+                            hof_ene1 = api.energyType(type_='gc:heatofformation')
+                            hof_ene1.set_valueOf_(float(data.hofenergies[-1]))
+                            ene1.add_energy(ee_ene1)
+                            ene1.add_energy(hof_ene1)
+                            sem1.set_energies(ene1)
+                            sdm1.set_semiEmpiricalScf(sem1)
+                        else:
+                            print ('The current CSX does not support this method')
+
+                        srs1.set_singleDeterminant(sdm1)
+
+                    if calcType in md_wfn_method:
+                        mdm1 = api.srsmdMethodType()
+                        if (calcType == 'CCSD'):
+                            ccsd1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                    basisSet='bse:'+basisName)
+                            ene1 = api.energiesType(unit='u:ElectronVolt')
+                            ee_ene1 = api.energyType(type_='gc:totalPotential')
+                            ee_ene1.set_valueOf_(float(data.ccenergies[0]))
+                            ce_ene1 = api.energyType(type_='gc:correlation')
+                            ce_ene1.set_valueOf_(float(data.ccenergies[-1])-float(molEE))
+                            ene1.add_energy(ee_ene1)
+                            ene1.add_energy(ce_ene1)
+                            ccsd1.set_energies(ene1)
+                            mdm1.set_ccsd(ccsd1)
+                        elif (calcType == 'CCSD-T'):
+                            ccsd_t1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                    basisSet='bse:'+basisName)
+                            ene1 = api.energiesType(unit='u:ElectronVolt')
+                            ee_ene1 = api.energyType(type_='gc:totalPotential')
+                            ee_ene1.set_valueOf_(float(data.ccenergies[-1]))
+                            ce_ene1 = api.energyType(type_='gc:correlation')
+                            ce_ene1.set_valueOf_(float(data.ccenergies[-1])-float(molEE))
+                            ene1.add_energy(ee_ene1)
+                            ene1.add_energy(ce_ene1)
+                            ccsd_t1.set_energies(ene1)
+                            mdm1.set_ccsd-t(ccsd_t1)
+                        else:
+                            print ('The current CSX does not support this method')
+                        srs1.set_multipleDeterminant(mdm1)
+                    qm1.set_singleReferenceState(srs1)
+                mc1.set_quantumMechanics(qm1)
+                cs1.add_molecularCalculation(mc1)
+        else:
+            #molecular system section
+            ms1 = api.msysType(systemCharge=molCharge, \
+                   systemMultiplicity=molMulti, id='s1')
+            temp1 = api.dataWithUnitsType(unit='u:Kelvin')
+            temp1.set_valueOf_(0.0)
+            ms1.set_systemTemperature(temp1)
+            mol1 = api.moleculeType(id='m1',atomCount=atomNum)
+            if hasattr(data, "atomcharges"):
+                atmCharge = data.atomcharges["mulliken"]
+            else:
+                atmCharge = [0]*atomNum
+            #obmol1 = openbabel.OBMol()
+            for iatm in range(atomNum):
+                #   xCoord = float(data.atomcoords[iatm,0])
+                xCoord = data.atomcoords[-1,iatm,0]
+                yCoord = data.atomcoords[-1,iatm,1]
+                zCoord = data.atomcoords[-1,iatm,2]
+                xCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
+                xCoord1.set_valueOf_(xCoord)
+                yCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
+                yCoord1.set_valueOf_(yCoord)
+                zCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
+                zCoord1.set_valueOf_(zCoord)
+                atomicNum = data.atomnos[iatm]
+                atm = api.atomType(id='a'+str(iatm+1), elementSymbol=chemElement.z2elm[atomicNum], \
+                        atomMass=chemElement.z2mass[atomicNum], \
+                        xCoord3D=xCoord1, \
+                        yCoord3D=yCoord1, \
+                        zCoord3D=zCoord1, \
+                        basisSet='bse:'+basisName, \
+                        calculatedAtomCharge=atmCharge[iatm], \
+                        formalAtomCharge=0)
+                mol1.add_atom(atm)
+            ms1.add_molecule(mol1)
+            cs1.add_molecularSystem(ms1)
+
+            #molCalculation section
+            sd_wfn_method = ['HF', 'DFT', 'MP2', 'MP3', 'MP4', 'AM1', 'PM3', 'PM6']
+            md_wfn_method = ['CCD', 'CCSD', 'CCSD-T', 'CIS', 'CISD', 'FCI', 'QCISD', 'QCISD-T']
+            mr_wfn_method = ['CASSCF', 'CASPT2', 'RASSCF', 'RASPT2', 'GVB', 'MCSCF', 'MRCC', 'MRCI']
+            mc1 = api.mcalType(id='c1', inputsystem='s1')
+            qm1 = api.qmCalcType()
+            if calcType in mr_wfn_method:
+                mrs1 = api.mrsMethodType()
+                mrsmd1 = api.mrsmdMethodType()
+                if calcType == 'GVB':
+                    gvb1 = api.resultType(methodology='gc:normal', spinType='gc:'+molSpin, \
+                            basisSet='bse:'+basisName, pairCount='2')
                     ene1 = api.energiesType(unit='u:ElectronVolt')
                     ee_ene1 = api.energyType(type_='gc:totalPotential')
                     ee_ene1.set_valueOf_(float(molEE))
                     ene1.add_energy(ee_ene1)
-                    dft1.set_energies(ene1)
-                    if hasOrb:
-                        dft1.set_waveFunction(wfn1)
-                    if hasProp:
-                        dft1.set_properties(prop1)
-                    if hasNMR:
-                        dft1.set_properties(prop2)
-                    if hasFreq:
-                        dft1.set_vibrationalAnalysis(vib1)
-                    if hasElec:
-                        dft1.set_electronicSpectra(elec1)
-                    sdm1.set_dft(dft1)
-                #MP2
-                elif (calcType == 'MP2'):
-                    mp21 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                    gvb1.set_energies(ene1)
+                    mrsmd1.set_gvb(gvb1)
+                elif calcType == 'CASSCF':
+                    casscf1  = api.resultType(methodology='gc:normal', spinType='gc:'+molSpin, \
                             basisSet='bse:'+basisName)
-                    ene1 = api.energiesType(unit='u:ElectronVolt')
-                    ee_ene1 = api.energyType(type_='gc:totalPotential')
-                    ee_ene1.set_valueOf_(float(data.mpenergies[-1]))
-                    ce_ene1 = api.energyType(type_='gc:correlation')
-                    ce_ene1.set_valueOf_(float(data.mpenergies[-1])-float(molEE))
-                    ene1.add_energy(ee_ene1)
-                    ene1.add_energy(ce_ene1)
-                    mp21.set_energies(ene1)
-                    if hasOrb:
-                        mp21.set_waveFunction(wfn1)
-                    if hasProp:
-                        mp21.set_properties(prop1)
-                    if hasNMR:
-                        mp21.set_properties(prop2)
-                    if hasFreq:
-                        mp21.set_vibrationalAnalysis(vib1)
-                    sdm1.set_mp2(mp21)
-                #Semiempirical methods
-                elif (calcType == 'AM1' or calcType == 'PM3' or calcType == 'PM6'):
-                    sem1 = api.resultType(methodology=calcType,spinType='gc:'+molSpin)
                     ene1 = api.energiesType(unit='u:ElectronVolt')
                     ee_ene1 = api.energyType(type_='gc:totalPotential')
                     ee_ene1.set_valueOf_(float(molEE))
-                    hof_ene1 = api.energyType(type_='gc:heatofformation')
-                    hof_ene1.set_valueOf_(float(data.hofenergies[-1]))
                     ene1.add_energy(ee_ene1)
-                    ene1.add_energy(hof_ene1)
-                    sem1.set_energies(ene1)
-                    if hasOrb:
-                        sem1.set_waveFunction(wfn1)
-                    if hasProp:
-                        sem1.set_properties(prop1)
-                    if hasNMR:
-                        sem1.set_properties(prop2)
-                    if hasFreq:
-                        sem1.set_vibrationalAnalysis(vib1)
-                    sdm1.set_semiEmpiricalScf(sem1)
-                else:
-                    print ('The current CSX does not support this method')
+                    casscf1.set_energies(ene1)
+                    mrsmd1.set_casscf(casscf1)
+                mrs1.set_multipleDeterminant(mrsmd1)
+                qm1.set_multipleReferenceState(mrs1)
+            else:
+                srs1 = api.srsMethodType()
+                if calcType in sd_wfn_method:
+                    sdm1 = api.srssdMethodType()
+                    #SCF
+                    if (calcType == 'HF'):
+                        scf1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                basisSet='bse:'+basisName)
+                        ene1 = api.energiesType(unit='u:ElectronVolt')
+                        ee_ene1 = api.energyType(type_='gc:totalPotential')
+                        ee_ene1.set_valueOf_(float(molEE))
+                        ene1.add_energy(ee_ene1)
+                        scf1.set_energies(ene1)
+                        if hasOrb:
+                            scf1.set_waveFunction(wfn1)
+                        if hasProp or hasPolar:
+                            scf1.set_properties(prop1)
+                        if hasNMR:
+                            scf1.set_properties(prop2)
+                        if hasFreq:
+                            scf1.set_vibrationalAnalysis(vib1)
+                        if hasElec:
+                            scf1.set_electronicSpectra(elec1)
+                        sdm1.set_abinitioScf(scf1)
+                    #DFT
+                    elif (calcType == 'DFT'):
+                        if hasElec:
+                            dft1 = api.resultType(methodology='gc:tddft',spinType='gc:'+molSpin, \
+                                    basisSet='bse:'+basisName, dftFunctional='gc:'+data.functional)
+                        else:
+                            dft1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                    basisSet='bse:'+basisName, dftFunctional='gc:'+data.functional)
+                        ene1 = api.energiesType(unit='u:ElectronVolt')
+                        ee_ene1 = api.energyType(type_='gc:totalPotential')
+                        ee_ene1.set_valueOf_(float(molEE))
+                        ene1.add_energy(ee_ene1)
+                        dft1.set_energies(ene1)
+                        if hasOrb:
+                            dft1.set_waveFunction(wfn1)
+                        if hasProp:
+                            dft1.set_properties(prop1)
+                        if hasNMR:
+                            dft1.set_properties(prop2)
+                        if hasFreq:
+                            dft1.set_vibrationalAnalysis(vib1)
+                        if hasElec:
+                            dft1.set_electronicSpectra(elec1)
+                        sdm1.set_dft(dft1)
+                    #MP2
+                    elif (calcType == 'MP2'):
+                        mp21 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                basisSet='bse:'+basisName)
+                        ene1 = api.energiesType(unit='u:ElectronVolt')
+                        ee_ene1 = api.energyType(type_='gc:totalPotential')
+                        ee_ene1.set_valueOf_(float(data.mpenergies[-1]))
+                        ce_ene1 = api.energyType(type_='gc:correlation')
+                        ce_ene1.set_valueOf_(float(data.mpenergies[-1])-float(molEE))
+                        ene1.add_energy(ee_ene1)
+                        ene1.add_energy(ce_ene1)
+                        mp21.set_energies(ene1)
+                        if hasOrb:
+                            mp21.set_waveFunction(wfn1)
+                        if hasProp:
+                            mp21.set_properties(prop1)
+                        if hasNMR:
+                            mp21.set_properties(prop2)
+                        if hasFreq:
+                            mp21.set_vibrationalAnalysis(vib1)
+                        sdm1.set_mp2(mp21)
+                    #Semiempirical methods
+                    elif (calcType == 'AM1' or calcType == 'PM3' or calcType == 'PM6'):
+                        sem1 = api.resultType(methodology=calcType,spinType='gc:'+molSpin)
+                        ene1 = api.energiesType(unit='u:ElectronVolt')
+                        ee_ene1 = api.energyType(type_='gc:totalPotential')
+                        ee_ene1.set_valueOf_(float(molEE))
+                        hof_ene1 = api.energyType(type_='gc:heatofformation')
+                        hof_ene1.set_valueOf_(float(data.hofenergies[-1]))
+                        ene1.add_energy(ee_ene1)
+                        ene1.add_energy(hof_ene1)
+                        sem1.set_energies(ene1)
+                        if hasOrb:
+                            sem1.set_waveFunction(wfn1)
+                        if hasProp:
+                            sem1.set_properties(prop1)
+                        if hasNMR:
+                            sem1.set_properties(prop2)
+                        if hasFreq:
+                            sem1.set_vibrationalAnalysis(vib1)
+                        sdm1.set_semiEmpiricalScf(sem1)
+                    else:
+                        print ('The current CSX does not support this method')
 
-                srs1.set_singleDeterminant(sdm1)
+                    srs1.set_singleDeterminant(sdm1)
 
-            if calcType in md_wfn_method:
-                mdm1 = api.srsmdMethodType()
-                if (calcType == 'CCSD'):
-                    ccsd1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
-                            basisSet='bse:'+basisName)
-                    ene1 = api.energiesType(unit='u:ElectronVolt')
-                    ee_ene1 = api.energyType(type_='gc:totalPotential')
-                    ee_ene1.set_valueOf_(float(data.ccenergies[0]))
-                    ce_ene1 = api.energyType(type_='gc:correlation')
-                    ce_ene1.set_valueOf_(float(data.ccenergies[-1])-float(molEE))
-                    ene1.add_energy(ee_ene1)
-                    ene1.add_energy(ce_ene1)
-                    ccsd1.set_energies(ene1)
-                    if hasOrb:
-                        ccsd1.set_waveFunction(wfn1)
-                    if hasProp:
-                        ccsd1.set_properties(prop1)
-                    if hasNMR:
-                        ccsd1.set_properties(prop2)
-                    if hasFreq:
-                        ccsd1.set_vibrationalAnalysis(vib1)
-                    mdm1.set_ccsd(ccsd1)
-                elif (calcType == 'CCSD-T'):
-                    ccsd_t1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
-                            basisSet='bse:'+basisName)
-                    ene1 = api.energiesType(unit='u:ElectronVolt')
-                    ee_ene1 = api.energyType(type_='gc:totalPotential')
-                    ee_ene1.set_valueOf_(float(data.ccenergies[-1]))
-                    ce_ene1 = api.energyType(type_='gc:correlation')
-                    ce_ene1.set_valueOf_(float(data.ccenergies[-1])-float(molEE))
-                    ene1.add_energy(ee_ene1)
-                    ene1.add_energy(ce_ene1)
-                    ccsd_t1.set_energies(ene1)
-                    if hasOrb:
-                        ccsd_t1.set_waveFunction(wfn1)
-                    if hasProp:
-                        ccsd_t1.set_properties(prop1)
-                    if hasNMR:
-                        ccsd_t1.set_properties(prop2)
-                    if hasFreq:
-                        ccsd_t1.set_vibrationalAnalysis(vib1)
-                    mdm1.set_ccsd-t(ccsd_t1)
-                else:
-                    print ('The current CSX does not support this method')
-                srs1.set_multipleDeterminant(mdm1)
-            qm1.set_singleReferenceState(srs1)
-        mc1.set_quantumMechanics(qm1)
-        cs1.set_molecularCalculation(mc1)
+                if calcType in md_wfn_method:
+                    mdm1 = api.srsmdMethodType()
+                    if (calcType == 'CCSD'):
+                        ccsd1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                basisSet='bse:'+basisName)
+                        ene1 = api.energiesType(unit='u:ElectronVolt')
+                        ee_ene1 = api.energyType(type_='gc:totalPotential')
+                        ee_ene1.set_valueOf_(float(data.ccenergies[0]))
+                        ce_ene1 = api.energyType(type_='gc:correlation')
+                        ce_ene1.set_valueOf_(float(data.ccenergies[-1])-float(molEE))
+                        ene1.add_energy(ee_ene1)
+                        ene1.add_energy(ce_ene1)
+                        ccsd1.set_energies(ene1)
+                        if hasOrb:
+                            ccsd1.set_waveFunction(wfn1)
+                        if hasProp:
+                            ccsd1.set_properties(prop1)
+                        if hasNMR:
+                            ccsd1.set_properties(prop2)
+                        if hasFreq:
+                            ccsd1.set_vibrationalAnalysis(vib1)
+                        mdm1.set_ccsd(ccsd1)
+                    elif (calcType == 'CCSD-T'):
+                        ccsd_t1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                basisSet='bse:'+basisName)
+                        ene1 = api.energiesType(unit='u:ElectronVolt')
+                        ee_ene1 = api.energyType(type_='gc:totalPotential')
+                        ee_ene1.set_valueOf_(float(data.ccenergies[-1]))
+                        ce_ene1 = api.energyType(type_='gc:correlation')
+                        ce_ene1.set_valueOf_(float(data.ccenergies[-1])-float(molEE))
+                        ene1.add_energy(ee_ene1)
+                        ene1.add_energy(ce_ene1)
+                        ccsd_t1.set_energies(ene1)
+                        if hasOrb:
+                            ccsd_t1.set_waveFunction(wfn1)
+                        if hasProp:
+                            ccsd_t1.set_properties(prop1)
+                        if hasNMR:
+                            ccsd_t1.set_properties(prop2)
+                        if hasFreq:
+                            ccsd_t1.set_vibrationalAnalysis(vib1)
+                        mdm1.set_ccsd-t(ccsd_t1)
+                    else:
+                        print ('The current CSX does not support this method')
+                    srs1.set_multipleDeterminant(mdm1)
+                qm1.set_singleReferenceState(srs1)
+            mc1.set_quantumMechanics(qm1)
+            cs1.add_molecularCalculation(mc1)
 
         csxfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
         cs1.export(csxfile, 0)
