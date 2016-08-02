@@ -207,7 +207,7 @@ class GAMESS(logfileparser.Logfile):
         if "AT PATH DISTANCE STOTAL" in line:
             if not hasattr(self, "irccoords"):
                 self.irccoords = []
-            self.irccoords.append(line.split()[-2])
+            self.irccoords.append(float(line.split()[-2]))
         # heat of formation for semiempirical methods
         if "HEAT OF FORMATION IS" in line:
             if not hasattr(self, "hofenergies"):

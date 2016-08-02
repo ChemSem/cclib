@@ -181,26 +181,25 @@ class CSX(filewriter.Writer):
         if hasProp or hasPolar:
             prop1 = api.propertiesType()
         #dipole moments information
-        if len(data.moments) == 1:
-            hasProp = False
         if hasProp:
         #    au2db = 2.541766
-            molDipoleX = data.moments[1][0]
-            molDipoleY = data.moments[1][1]
-            molDipoleZ = data.moments[1][2]
-            molDipoleTot = math.sqrt(molDipoleX*molDipoleX+molDipoleY*molDipoleY+molDipoleZ*molDipoleZ)
-            sprop1 = api.propertyType(name='dipoleMomentX',unit='u:Debye',moleculeId='m1')
-            sprop1.set_valueOf_(molDipoleX)
-            sprop2 = api.propertyType(name='dipoleMomentY',unit='u:Debye',moleculeId='m1')
-            sprop2.set_valueOf_(molDipoleY)
-            sprop3 = api.propertyType(name='dipoleMomentZ',unit='u:Debye',moleculeId='m1')
-            sprop3.set_valueOf_(molDipoleZ)
-            sprop4 = api.propertyType(name='dipoleMomentAverage',unit='u:Debye')
-            sprop4.set_valueOf_(molDipoleTot)
-            prop1.add_systemProperty(sprop1)
-            prop1.add_systemProperty(sprop2)
-            prop1.add_systemProperty(sprop3)
-            prop1.add_systemProperty(sprop4)
+            if len(data.moments) > 1:
+                molDipoleX = data.moments[1][0]
+                molDipoleY = data.moments[1][1]
+                molDipoleZ = data.moments[1][2]
+                molDipoleTot = math.sqrt(molDipoleX*molDipoleX+molDipoleY*molDipoleY+molDipoleZ*molDipoleZ)
+                sprop1 = api.propertyType(name='dipoleMomentX',unit='u:Debye',moleculeId='m1')
+                sprop1.set_valueOf_(molDipoleX)
+                sprop2 = api.propertyType(name='dipoleMomentY',unit='u:Debye',moleculeId='m1')
+                sprop2.set_valueOf_(molDipoleY)
+                sprop3 = api.propertyType(name='dipoleMomentZ',unit='u:Debye',moleculeId='m1')
+                sprop3.set_valueOf_(molDipoleZ)
+                sprop4 = api.propertyType(name='dipoleMomentAverage',unit='u:Debye',moleculeId='m1')
+                sprop4.set_valueOf_(molDipoleTot)
+                prop1.add_systemProperty(sprop1)
+                prop1.add_systemProperty(sprop2)
+                prop1.add_systemProperty(sprop3)
+                prop1.add_systemProperty(sprop4)
         #polarizability information
         if hasPolar:
             polarXX = data.polar[0][0]
@@ -278,7 +277,7 @@ class CSX(filewriter.Writer):
                 sys1 = api.itemType(ref='s'+str(ipnt+1))
                 calc1 = api.itemType(ref='c'+str(ipnt+1))
                 res1 = api.resType(id='pnt'+str(ipnt+1)+'r1', \
-                        name='total electronic energy for point'+str(ipnt))
+                        name='total electronic energy for point '+str(ipnt+1))
                 val1 = api.valType(ref='e'+str(ipnt+1)+'_'+'total_energy')
                 res1.add_value(val1)
                 entry1.add_result(res1)
@@ -378,7 +377,7 @@ class CSX(filewriter.Writer):
                             ene1 = api.energiesType(unit='u:ElectronVolt')
                             ee_ene1 = api.energyType(id='e'+str(ipnt+1)+'_'+'total_energy', \
                                     type_='gc:totalPotential')
-                            ee_ene1.set_valueOf_(float(data.ircenergies[ipnt]))
+                            ee_ene1.set_valueOf_(data.ircenergies[ipnt])
                             ene1.add_energy(ee_ene1)
                             scf1.set_energies(ene1)
                             sdm1.set_abinitioScf(scf1)
@@ -391,8 +390,9 @@ class CSX(filewriter.Writer):
                                 dft1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
                                         basisSet='bse:'+basisName, dftFunctional='gc:'+data.functional)
                             ene1 = api.energiesType(unit='u:ElectronVolt')
-                            ee_ene1 = api.energyType(type_='gc:totalPotential')
-                            ee_ene1.set_valueOf_(float(molEE))
+                            ee_ene1 = api.energyType(id='e'+str(ipnt+1)+'_'+'total_energy', \
+                                    type_='gc:totalPotential')
+                            ee_ene1.set_valueOf_(data.ircenergies[ipnt])
                             ene1.add_energy(ee_ene1)
                             dft1.set_energies(ene1)
                             sdm1.set_dft(dft1)
@@ -401,12 +401,10 @@ class CSX(filewriter.Writer):
                             mp21 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
                                     basisSet='bse:'+basisName)
                             ene1 = api.energiesType(unit='u:ElectronVolt')
-                            ee_ene1 = api.energyType(type_='gc:totalPotential')
-                            ee_ene1.set_valueOf_(float(data.mpenergies[-1]))
-                            ce_ene1 = api.energyType(type_='gc:correlation')
-                            ce_ene1.set_valueOf_(float(data.mpenergies[-1])-float(molEE))
+                            ee_ene1 = api.energyType(id='e'+str(ipnt+1)+'_'+'total_energy', \
+                                    type_='gc:totalPotential')
+                            ee_ene1.set_valueOf_(data.ircenergies[ipnt])
                             ene1.add_energy(ee_ene1)
-                            ene1.add_energy(ce_ene1)
                             mp21.set_energies(ene1)
                             sdm1.set_mp2(mp21)
                         #Semiempirical methods

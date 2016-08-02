@@ -720,7 +720,7 @@ class csType(GeneratedsSuper):
             return True
         else:
             return False
-    def export(self, outfile, level, namespace_='cs:', name_='chemicalSemantics', namespacedef_='xmlns:cs="http://chemicalsemantics.com/csx" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:gc="http://purl.org/gc/" xmlns:bse="https://bse.pnl.gov/bse/basissets" xmlns:u="http://www.qudt.org/qudt/owl/1.0.0/unit.owl#"', pretty_print=True):
+    def export(self, outfile, level, namespace_='cs:', name_='chemicalSemantics', namespacedef_='xmlns:cs="http://chemicalsemantics.com/csx" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://chemicalsemantics.com/csx http://chemicalsemantics.com/schema/csx2.xsd" xmlns:gc="http://purl.org/gc/" xmlns:bse="https://bse.pnl.gov/bse/basissets" xmlns:u="http://www.qudt.org/qudt/owl/1.0.0/unit.owl#"', pretty_print=True):
         if pretty_print:
             eol_ = '\n'
         else:

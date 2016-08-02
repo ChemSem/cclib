@@ -54,6 +54,13 @@ class NWChem(logfileparser.Logfile):
         # FIXME if necessary
         return label
 
+    def before_parsing(self):
+        #determine the forward or backward direction for an IRC calculation
+        self.forirc = True
+        #IRC steps
+        self.ircstep = 0
+        self.icoords = 0
+
     name2element = lambda self, lbl: "".join(itertools.takewhile(str.isalpha, str(lbl)))
 
     def extract(self, inputfile, line):
@@ -61,6 +68,8 @@ class NWChem(logfileparser.Logfile):
 
         if "Northwest Computational" in line:
             self.version = line.split()[5]
+        if "GS Step" in line:
+            self.ircstep += 1
         # This is printed in the input module, so should always be the first coordinates,
         # and contains some basic information we want to parse as well. However, this is not
         # the only place where the coordinates are printed during geometry optimization,
@@ -68,6 +77,7 @@ class NWChem(logfileparser.Logfile):
         # alongside the coordinate gradients. This geometry printout happens at the
         # beginning of each optimization step only.
         if line.strip() == 'Geometry "geometry" -> ""' or line.strip() == 'Geometry "geometry" -> "geometry"':
+            self.icoords += 1
 
             self.skip_lines(inputfile, ['dashes', 'blank', 'units', 'blank', 'header', 'dashes'])
 
@@ -77,6 +87,7 @@ class NWChem(logfileparser.Logfile):
             line = next(inputfile)
             coords = []
             atomnos = []
+            iatom = 0
             while line.strip():
                 # The column labeled 'tag' is usually empty, but I'm not sure whether it can have spaces,
                 # so for now assume that it can and that there will be seven columns in that case.
@@ -86,11 +97,16 @@ class NWChem(logfileparser.Logfile):
                     index, atomname, tag, nuclear, x, y, z = line.split()
                 coords.append(list(map(float, [x,y,z])))
                 atomnos.append(int(float(nuclear)))
+                iatom += 1
                 line = next(inputfile)
 
             self.atomcoords.append(coords)
+            if self.icoords > 1 and self.icoords != self.ircstep+1:
+                del self.atomcoords[-1]
+                self.icoords = self.ircstep
 
             self.set_attribute('atomnos', atomnos)
+            self.set_attribute('natom', iatom)
 
         # If the geometry is printed in XYZ format, it will have the number of atoms.
         if line[12:31] == "XYZ format geometry":
@@ -1078,6 +1094,27 @@ class NWChem(logfileparser.Logfile):
             self.nmriso.append(line.split()[-1])
         if "anisotropy" in line:
             self.nmranis.append(line.split()[-1])
+
+        #IRC
+        if "Backward IRC" in line:
+            self.forirc = False
+        if "&  Point" in line:
+            if not hasattr(self, "irccoords"):
+                self.irccoords=[]
+            if not hasattr(self, "ircenergies"):
+                self.ircenergies=[]
+            line = next(inputfile)
+            line = next(inputfile)
+            if self.forirc:
+                ircpnt = int(line.split()[1])
+                self.ircpnt = ircpnt + 1
+                self.irccoords.append(float(line.split()[4]))
+            else:
+                self.ircpnt = self.ircpnt + 1
+                self.irccoords.append(-float(line.split()[4]))
+            ircenergy=float(line.split()[2])
+            self.ircenergies.append(utils.convertor(ircenergy, "hartree", "eV"))
+
 
 
     def after_parsing(self):
