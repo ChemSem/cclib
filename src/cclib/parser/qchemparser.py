@@ -131,8 +131,8 @@ class QChem(logfileparser.Logfile):
     def extract(self, inputfile, line):
         """Extract information from the file object inputfile."""
 
-        wfn_method = ['HF', 'MP2', 'RI-MP2', 'LOCAL_MP2', 'MP4', 'CCD', 'CCSD', \
-                      'CCSD(T)', 'QCISD', 'QCISD(T)']
+        wfn_method = ['HF', 'HARTREE-FOCK', 'MP2', 'RI-MP2', 'LOCAL_MP2', 'MP4', \
+                      'CCD', 'CCSD', 'CCSD(T)', 'QCISD', 'QCISD(T)']
         #extract the version number
         if 'Q-Chem,' in line:
             tversion = line.split()[1]
@@ -148,14 +148,22 @@ class QChem(logfileparser.Logfile):
                         line = next(inputfile)
                         if 'method' in line.lower():
                             method = line.split()[-1].upper()
-                            if method in wfn_method:
-                                self.theory = method
+                            if method.upper() in wfn_method:
+                                if method.upper() == 'HARTREE-FOCK':
+                                    self.theory = 'HF'
+                                else:
+                                    self.theory = method
                             else:
                                 self.theory = 'DFT'
                                 self.functional = method
                         if 'exchange' in line.lower():
                             self.theory = 'DFT'
-                            self.functional = line.split()[-1]
+                            xfunctional = line.split()[1]
+                            if xfunctional == 'B':
+                                self.xfunctional = 'Becke88'
+                        if 'correlation' in line.lower():
+                            self.theory = 'DFT'
+                            self.cfunctional = line.split()[1]
                         if 'print_orbitals' in line.lower():
                             # Stay with the default value if a number isn't
                             # specified.

@@ -80,6 +80,8 @@ class GAMESS(logfileparser.Logfile):
         if line[1:7] == "SCFTYP" and not hasattr(self, "theory"):
             if line.split()[0][-3:] == "GVB":
                 self.theory = line.split()[0][-3:]
+            elif line.split()[0][-5:] == "MCSCF":
+                self.theory = line.split()[0][-5:]
             else:
                 self.theory = line.split()[0][-2:]
         if line[1:7] == "DFTTYP" and line[8:12] != "NONE":

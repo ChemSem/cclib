@@ -235,7 +235,7 @@ class DALTON(logfileparser.Logfile):
             #self.skip_lines(inputfile, ['b', 'basisname', 'b'])
             line = next(inputfile)
             line = next(inputfile)
-            self.basisname = re.findall(r'"([^"]*)"', line)[0]
+            self.basisname = line.split()[4].strip('\"')
             line = next(inputfile)
 
             line = next(inputfile)

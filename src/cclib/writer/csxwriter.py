@@ -53,6 +53,7 @@ class CSX(filewriter.Writer):
         hasPolar = True if (hasattr(data, 'polar')) else False
         hasNMR = True if (hasattr(data, 'nmriso')) else False
         hasElec = True if (hasattr(data, 'etoscs')) else False
+        hasCfunctional = True if (hasattr(data, 'cfunctional')) else False
         hasCollection = True if (hasattr(data, 'ircpnt')) else False
         molSpin = data.spintype if (hasattr(data, 'spintype')) else 'RHF'
         if molMulti == 1 :
@@ -474,11 +475,11 @@ class CSX(filewriter.Writer):
                 xCoord = data.atomcoords[-1,iatm,0]
                 yCoord = data.atomcoords[-1,iatm,1]
                 zCoord = data.atomcoords[-1,iatm,2]
-                xCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
+                xCoord1 = api.floatWithUnitType(unit='u:Angstrom')
                 xCoord1.set_valueOf_(xCoord)
-                yCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
+                yCoord1 = api.floatWithUnitType(unit='u:Angstrom')
                 yCoord1.set_valueOf_(yCoord)
-                zCoord1 = api.dataWithUnitsType(unit='u:Angstrom')
+                zCoord1 = api.floatWithUnitType(unit='u:Angstrom')
                 zCoord1.set_valueOf_(zCoord)
                 atomicNum = data.atomnos[iatm]
                 atm = api.atomType(id='a'+str(iatm+1), elementSymbol=chemElement.z2elm[atomicNum], \
@@ -520,6 +521,15 @@ class CSX(filewriter.Writer):
                     ene1.add_energy(ee_ene1)
                     casscf1.set_energies(ene1)
                     mrsmd1.set_casscf(casscf1)
+                elif calcType == 'MCSCF':
+                    mcscf1  = api.resultType(methodology='gc:normal', spinType='gc:'+molSpin, \
+                            basisSet='bse:'+basisName)
+                    ene1 = api.energiesType(unit='u:ElectronVolt')
+                    ee_ene1 = api.energyType(type_='gc:totalPotential')
+                    ee_ene1.set_valueOf_(float(molEE))
+                    ene1.add_energy(ee_ene1)
+                    mcscf1.set_energies(ene1)
+                    mrsmd1.set_mcscf(mcscf1)
                 mrs1.set_multipleDeterminant(mrsmd1)
                 qm1.set_multipleReferenceState(mrs1)
             else:
@@ -552,8 +562,14 @@ class CSX(filewriter.Writer):
                             dft1 = api.resultType(methodology='gc:tddft',spinType='gc:'+molSpin, \
                                     basisSet='bse:'+basisName, dftFunctional='gc:'+data.functional)
                         else:
-                            dft1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
-                                    basisSet='bse:'+basisName, dftFunctional='gc:'+data.functional)
+                            if hasCfunctional:
+                                dft1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                        basisSet='bse:'+basisName, \
+                                        exchangeFunctional='gc:'+data.xfunctional, \
+                                        correlationFunctional='gc:'+data.cfunctional)
+                            else:
+                                dft1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                        basisSet='bse:'+basisName, dftFunctional='gc:'+data.functional)
                         ene1 = api.energiesType(unit='u:ElectronVolt')
                         ee_ene1 = api.energyType(type_='gc:totalPotential')
                         ee_ene1.set_valueOf_(float(molEE))

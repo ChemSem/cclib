@@ -97,6 +97,7 @@ class ccData(object):
         "atomspins":      dict,
         "basisname":      str,
         "ccenergies":     numpy.ndarray,
+        "cfunctional":    str,
         "charge":         int,
         "coreelectrons":  numpy.ndarray,
         "enthalpy":       float,
@@ -155,6 +156,7 @@ class ccData(object):
         "vibirs":         numpy.ndarray,
         "vibramans":      numpy.ndarray,
         "vibsyms":        list,
+        "xfunctional":    str,
     }
 
     # The name of all attributes can be generated from the dictionary above.
