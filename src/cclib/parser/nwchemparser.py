@@ -79,7 +79,12 @@ class NWChem(logfileparser.Logfile):
         if line.strip() == 'Geometry "geometry" -> ""' or line.strip() == 'Geometry "geometry" -> "geometry"':
             self.icoords += 1
 
-            self.skip_lines(inputfile, ['dashes', 'blank', 'units', 'blank', 'header', 'dashes'])
+            self.skip_lines(inputfile, ['dashes', 'blank'])
+
+            line = next(inputfile)
+            isBohr = True if (line.split()[3] == 'a.u.') else False
+
+            self.skip_lines(inputfile, ['blank', 'header', 'dashes'])
 
             if not hasattr(self, 'atomcoords'):
                 self.atomcoords = []
@@ -95,7 +100,11 @@ class NWChem(logfileparser.Logfile):
                     index, atomname, nuclear, x, y, z = line.split()
                 else:
                     index, atomname, tag, nuclear, x, y, z = line.split()
-                coords.append(list(map(float, [x,y,z])))
+                if isBohr:
+                    x = utils.convertor(float(x), 'bohr', 'Angstrom')
+                    y = utils.convertor(float(y), 'bohr', 'Angstrom')
+                    z = utils.convertor(float(z), 'bohr', 'Angstrom')
+                coords.append([x,y,z])
                 atomnos.append(int(float(nuclear)))
                 iatom += 1
                 line = next(inputfile)
