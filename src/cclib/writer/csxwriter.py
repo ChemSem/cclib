@@ -158,7 +158,10 @@ class CSX(filewriter.Writer):
         if hasFreq:
             molFreqNum = len(data.vibfreqs)
             frqString = ' '.join(str(x) for x in data.vibfreqs)
-            intString = ' '.join(str(x) for x in data.vibirs)
+            if hasattr(data, 'vibirs'):
+                intString = ' '.join(str(x) for x in data.vibirs)
+            else:
+                intString = ' '.join(str(x) for x in [1.0]*molFreqNum)
             vib1 = api.vibAnalysisType(vibrationCount=molFreqNum)
             freq1 = api.stringArrayType(unit="gc:RecipricalCentimeter")
             freq1.set_valueOf_(frqString)

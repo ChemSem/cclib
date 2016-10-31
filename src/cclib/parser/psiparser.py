@@ -902,7 +902,107 @@ class Psi(logfileparser.Logfile):
                 self.moments = [self.reference, dipole]
             else:
                 assert self.moments[1] == dipole
+        ## Harmonic frequencies.
 
+        # -------------------------------------------------------------
+
+        #   Computing second-derivative from gradients using projected,
+        #   symmetry-adapted, cartesian coordinates (fd_freq_1).
+
+        #   74 gradients passed in, including the reference geometry.
+        #   Generating complete list of displacements from unique ones.
+
+        #       Operation 2 takes plus displacements of irrep Bg to minus ones.
+        #       Operation 3 takes plus displacements of irrep Au to minus ones.
+        #       Operation 2 takes plus displacements of irrep Bu to minus ones.
+
+        #         Irrep      Harmonic Frequency
+        #                         (cm-1)
+        #       -----------------------------------------------
+        #            Au          137.2883
+        if line.strip() == 'Irrep      Harmonic Frequency':
+
+            vibsyms = []
+            vibfreqs = []
+
+            self.skip_lines(inputfile, ['(cm-1)', 'dashes'])
+
+            ## The first section contains the symmetry of each normal
+            ## mode and its frequency.
+            line = next(inputfile)
+            while '---' not in line:
+                chomp = line.split()
+                vibsym = chomp[0]
+                vibfreq = Psi.parse_vibfreq(chomp[1])
+                vibsyms.append(vibsym)
+                vibfreqs.append(vibfreq)
+                line = next(inputfile)
+
+            self.set_attribute('vibsyms', vibsyms)
+            self.set_attribute('vibfreqs', vibfreqs)
+
+            line = next(inputfile)
+            assert line.strip() == ''
+            line = next(inputfile)
+            assert 'Normal Modes' in line
+            line = next(inputfile)
+            assert 'Molecular mass is' in line
+            if hasattr(self, 'atommasses'):
+                assert abs(float(line.split()[3]) - sum(self.atommasses)) < 1.0e-4
+            line = next(inputfile)
+            assert line.strip() == 'Frequencies in cm^-1; force constants in au.'
+            line = next(inputfile)
+            assert line.strip() == ''
+            line = next(inputfile)
+
+            ## The second section contains the frequency, force
+            ## constant, and displacement for each normal mode, along
+            ## with the atomic masses.
+
+            #       Normal Modes (non-mass-weighted).
+            #       Molecular mass is  130.07825 amu.
+            #       Frequencies in cm^-1; force constants in au.
+
+            #  Frequency:        137.29
+            #  Force constant:   0.0007
+            #            X       Y       Z           mass
+            # C      0.000   0.000   0.050      12.000000
+            # C      0.000   0.000   0.050      12.000000
+            for vibfreq in self.vibfreqs:
+                _vibfreq = Psi.parse_vibfreq(line[13:].strip())
+                assert abs(vibfreq - _vibfreq) < 1.0e-2
+                line = next(inputfile)
+                # Can't do anything with this for now.
+                assert 'Force constant:' in line
+                line = next(inputfile)
+                assert 'X       Y       Z           mass' in line
+                line = next(inputfile)
+                if not hasattr(self, 'vibdisps'):
+                    self.vibdisps = []
+                normal_mode_disps = []
+                # for k in range(self.natom):
+                while line.strip():
+                    chomp = line.split()
+                    # Do nothing with this for now.
+                    atomsym = chomp[0]
+                    atomcoords = [float(x) for x in chomp[1:4]]
+                    # Do nothing with this for now.
+                    atommass = float(chomp[4])
+                    normal_mode_disps.append(atomcoords)
+                    line = next(inputfile)
+                self.vibdisps.append(normal_mode_disps)
+                line = next(inputfile)
+
+    @staticmethod
+    def parse_vibfreq(vibfreq):
+        """Imaginary frequencies are printed as '12.34i', rather than
+        '-12.34'.
+        """
+        is_imag = vibfreq[-1] == 'i'
+        if is_imag:
+            return -float(vibfreq[:-1])
+        else:
+            return float(vibfreq)
 
 if __name__ == "__main__":
     import doctest, psiparser
