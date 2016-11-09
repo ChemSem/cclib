@@ -102,7 +102,7 @@ class QChem(logfileparser.Logfile):
                 _nmo, _nbasis = self.mocoeffs[im].shape
                 if (_nmo, _nbasis) != (self.nmo, self.nbasis):
                     coeffs = numpy.empty((self.nmo, self.nbasis))
-                    coeffs[:] = numpy.nan
+                    coeffs[:] = 0.0
                     coeffs[0:_nmo, 0:_nbasis] = self.mocoeffs[im]
                     self.mocoeffs[im] = coeffs
 
@@ -161,6 +161,8 @@ class QChem(logfileparser.Logfile):
                             xfunctional = line.split()[1]
                             if xfunctional == 'B':
                                 self.xfunctional = 'Becke88'
+                            else:
+                                self.functional = xfunctional
                         if 'correlation' in line.lower():
                             self.theory = 'DFT'
                             self.cfunctional = line.split()[1]
@@ -894,7 +896,8 @@ class QChem(logfileparser.Logfile):
             # nothing is gained by it.
 
             mocoeffs = numpy.empty(shape=(self.nbasis, self.norbdisp_alpha_aonames))
-            self.parse_matrix_aonames(inputfile, mocoeffs)
+            lowestmoenergy = self.parse_matrix_aonames(inputfile, mocoeffs)
+            self.moenergies[0][0] = utils.convertor(float(lowestmoenergy), 'hartree', 'eV')
             # Only use these MO coefficients if we don't have them
             # from `scf_final_print`.
             if len(self.mocoeffs) == 0:
@@ -1293,6 +1296,8 @@ class QChem(logfileparser.Logfile):
                 line = next(inputfile)
             # Do nothing for now.
             if 'eigenvalues' in line:
+                if colcounter == 0:
+                    lowestmoenergy = line.split()[1]
                 line = next(inputfile)
             rowcounter = 0
             while rowcounter < nrows:
@@ -1320,6 +1325,7 @@ class QChem(logfileparser.Logfile):
                 line = next(inputfile)
                 rowcounter += 1
             colcounter += self.ncolsblock
+        return lowestmoenergy
 
     def generate_atom_map(self):
         """Generate the map to go from Q-Chem atom numbering:
