@@ -155,14 +155,14 @@ class QChem(logfileparser.Logfile):
                                     self.theory = method
                             else:
                                 self.theory = 'DFT'
-                                self.functional = method
+                                self.functional = method.upper()
                         if 'exchange' in line.lower():
                             self.theory = 'DFT'
                             xfunctional = line.split()[1]
                             if xfunctional == 'B':
                                 self.xfunctional = 'Becke88'
                             else:
-                                self.functional = xfunctional
+                                self.functional = xfunctional.upper()
                         if 'correlation' in line.lower():
                             self.theory = 'DFT'
                             self.cfunctional = line.split()[1]
