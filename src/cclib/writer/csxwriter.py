@@ -546,7 +546,10 @@ class CSX(filewriter.Writer):
                         ene1 = api.energiesType(unit='u:ElectronVolt')
                         ee_ene1 = api.energyType(type_='gc:totalPotential')
                         ee_ene1.set_valueOf_(float(molEE))
+                        nn_ene1 = api.energyType(type_='gc:nuclearRepulsion')
+                        nn_ene1.set_valueOf_(data.nnenergies[-1])
                         ene1.add_energy(ee_ene1)
+                        ene1.add_energy(nn_ene1)
                         scf1.set_energies(ene1)
                         if hasOrb:
                             scf1.set_waveFunction(wfn1)
@@ -576,7 +579,10 @@ class CSX(filewriter.Writer):
                         ene1 = api.energiesType(unit='u:ElectronVolt')
                         ee_ene1 = api.energyType(type_='gc:totalPotential')
                         ee_ene1.set_valueOf_(float(molEE))
+                        nn_ene1 = api.energyType(type_='gc:nuclearRepulsion')
+                        nn_ene1.set_valueOf_(data.nnenergies[-1])
                         ene1.add_energy(ee_ene1)
+                        ene1.add_energy(nn_ene1)
                         dft1.set_energies(ene1)
                         if hasOrb:
                             dft1.set_waveFunction(wfn1)
@@ -598,8 +604,11 @@ class CSX(filewriter.Writer):
                         ee_ene1.set_valueOf_(float(data.mpenergies[-1]))
                         ce_ene1 = api.energyType(type_='gc:correlation')
                         ce_ene1.set_valueOf_(float(data.mpenergies[-1])-float(molEE))
+                        nn_ene1 = api.energyType(type_='gc:nuclearRepulsion')
+                        nn_ene1.set_valueOf_(data.nnenergies[-1])
                         ene1.add_energy(ee_ene1)
                         ene1.add_energy(ce_ene1)
+                        ene1.add_energy(nn_ene1)
                         mp21.set_energies(ene1)
                         if hasOrb:
                             mp21.set_waveFunction(wfn1)
@@ -645,8 +654,11 @@ class CSX(filewriter.Writer):
                         ee_ene1.set_valueOf_(float(data.ccenergies[0]))
                         ce_ene1 = api.energyType(type_='gc:correlation')
                         ce_ene1.set_valueOf_(float(data.ccenergies[-1])-float(molEE))
+                        nn_ene1 = api.energyType(type_='gc:nuclearRepulsion')
+                        nn_ene1.set_valueOf_(data.nnenergies[-1])
                         ene1.add_energy(ee_ene1)
                         ene1.add_energy(ce_ene1)
+                        ene1.add_energy(nn_ene1)
                         ccsd1.set_energies(ene1)
                         if hasOrb:
                             ccsd1.set_waveFunction(wfn1)
@@ -657,6 +669,29 @@ class CSX(filewriter.Writer):
                         if hasFreq:
                             ccsd1.set_vibrationalAnalysis(vib1)
                         mdm1.set_ccsd(ccsd1)
+                    elif (calcType == 'CCD'):
+                        ccd1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                basisSet='bse:'+basisName)
+                        ene1 = api.energiesType(unit='u:ElectronVolt')
+                        ee_ene1 = api.energyType(type_='gc:totalPotential')
+                        ee_ene1.set_valueOf_(float(data.ccenergies[-1]))
+                        ce_ene1 = api.energyType(type_='gc:correlation')
+                        ce_ene1.set_valueOf_(float(data.ccenergies[-1])-float(molEE))
+                        nn_ene1 = api.energyType(type_='gc:nuclearRepulsion')
+                        nn_ene1.set_valueOf_(data.nnenergies[-1])
+                        ene1.add_energy(ee_ene1)
+                        ene1.add_energy(ce_ene1)
+                        ene1.add_energy(nn_ene1)
+                        ccd1.set_energies(ene1)
+                        if hasOrb:
+                            ccd1.set_waveFunction(wfn1)
+                        if hasProp:
+                            ccd1.set_properties(prop1)
+                        if hasNMR:
+                            ccd1.set_properties(prop2)
+                        if hasFreq:
+                            ccd1.set_vibrationalAnalysis(vib1)
+                        mdm1.set_ccd(ccd1)
                     elif (calcType == 'CCSD-T'):
                         ccsd_t1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
                                 basisSet='bse:'+basisName)
@@ -665,8 +700,11 @@ class CSX(filewriter.Writer):
                         ee_ene1.set_valueOf_(float(data.ccenergies[-1]))
                         ce_ene1 = api.energyType(type_='gc:correlation')
                         ce_ene1.set_valueOf_(float(data.ccenergies[-1])-float(molEE))
+                        nn_ene1 = api.energyType(type_='gc:nuclearRepulsion')
+                        nn_ene1.set_valueOf_(data.nnenergies[-1])
                         ene1.add_energy(ee_ene1)
                         ene1.add_energy(ce_ene1)
+                        ene1.add_energy(nn_ene1)
                         ccsd_t1.set_energies(ene1)
                         if hasOrb:
                             ccsd_t1.set_waveFunction(wfn1)

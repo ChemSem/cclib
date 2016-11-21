@@ -299,6 +299,10 @@ class QChem(logfileparser.Logfile):
         # Number of electrons.
         # Useful for determining the number of occupied/virtual orbitals.
         if 'Nuclear Repulsion Energy' in line:
+            if not hasattr(self, 'nnenergies'):
+                self.nnenergies = []
+            nnenergy = float(line.split()[-2])
+            self.nnenergies.append(utils.convertor(nnenergy, 'hartree', 'eV'))
             if not hasattr(self, 'nalpha'):
                 line = next(inputfile)
                 nelec_re_string = 'There are(\s+[0-9]+) alpha and(\s+[0-9]+) beta electrons'
@@ -518,6 +522,7 @@ class QChem(logfileparser.Logfile):
         # Hopefully we only have to deal with ccman2 here.
 
         if 'CCD total energy' in line:
+            print(line)
             if not hasattr(self, 'ccenergies'):
                 self.ccenergies = []
             ccdenergy = float(line.split()[-1])

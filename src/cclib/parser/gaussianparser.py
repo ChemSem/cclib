@@ -449,6 +449,13 @@ class Gaussian(logfileparser.Logfile):
 
             self.scftargets.append(scftargets)
 
+        # Extract Nuclear Repulsion Energy
+        if 'nuclear repulsion energy' in line:
+            if not hasattr(self, 'nnenergies'):
+                self.nnenergies = []
+            nnenergy = float(line.split()[-2])
+            self.nnenergies.append(utils.convertor(nnenergy, 'hartree', 'eV'))
+
         # Extract SCF convergence information (QM calcs).
         if line[1:10] == 'Cycle   1':
                     

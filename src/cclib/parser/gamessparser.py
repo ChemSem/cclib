@@ -304,6 +304,13 @@ class GAMESS(logfileparser.Logfile):
             mult = int(line.split()[-1])
             self.set_attribute('mult', mult)
 
+        # Extract nuclear repulsion energy
+        if "THE NUCLEAR REPULSION ENERGY" in line:
+            if not hasattr(self, "nnenergies"):
+                self.nnenergies = []
+            nnenergy = float(line.split()[-1])
+            self.nnenergies.append(utils.convertor(nnenergy, "hartree", "eV"))
+
         # etenergies (originally used only for CIS runs, but now also TD-DFT)
         if "EXCITATION ENERGIES" in line and line.find("DONE WITH") < 0:
 

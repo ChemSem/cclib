@@ -62,6 +62,7 @@ class ccData(object):
         natom -- number of atoms (integer)
         nbasis -- number of basis functions (integer)
         nmo -- number of molecular orbitals (integer)
+        nnenergies -- nuclear repulsion energies (array[1], eV)
         nocoeffs -- natural orbital coefficients (array[2])
         nooccnos -- natural orbital occupation numbers (array[1])
         optdone -- flags whether an optimization has converged (Boolean)
@@ -134,6 +135,7 @@ class ccData(object):
         "nmo":            int,
         "nmriso":         numpy.ndarray,
         "nmranis":        numpy.ndarray,
+        "nnenergies":     numpy.ndarray,
         "nocoeffs":       numpy.ndarray,
         "nooccnos":       numpy.ndarray,
         "optdone":        bool,
