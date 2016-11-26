@@ -209,6 +209,8 @@ class Gaussian(logfileparser.Logfile):
                 basisname = "6-311G*"
             if basisname == "6-31G(d,p)":
                 basisname = "6-31G**"
+            if basisname == "6-31+G(d,p)":
+                basisname = "6-31+G**"
             if basisname == "6-311G(d,p)":
                 basisname = "6-311G**"
 
@@ -508,6 +510,12 @@ class Gaussian(logfileparser.Logfile):
         # 4-point extrapolation.
         # It= 13 PL= 0.110D-05 DiagD=F ESCF=      4.687669 Diff=-0.111D-06 RMSDP= 0.653D-07.
         # Energy=    0.172272018655 NIter=  14.
+        if "RHF-AM1" in line or "UHF-AM1" in line:
+            self.theory = "AM1"
+        if "RHF-PM3" in line or "UHF-PM3" in line:
+            self.theory = "PM3"
+        if "RHF-PM6" in line or "UHF-PM6" in line:
+            self.theory = "PM6"
         if line[1:4] == 'It=':
 
             scftargets = numpy.array([1E-7], "d") # This is the target value for the rms
@@ -548,7 +556,19 @@ class Gaussian(logfileparser.Logfile):
                 self.theory = 'HF'
             else:
                 self.theory = 'DFT'
-                self.functional = t1[t1.index("(") + 2:t1.rindex(")")]
+                functional = t1[t1.index("(") + 2:t1.rindex(")")]
+                if 'B+HF-' in functional:
+                    self.functional = 'B3' + functional[5:]
+                elif 'PBE+HF-' in functional:
+                    self.functional = 'PBE1' + functional[7:]
+                elif 'PBE-' in functional:
+                    self.functional = 'PBE' + functional[4:]
+                elif 'M062X' in functional:
+                    self.functional = 'M06-2X'
+                elif 'mPW+HF-PW91' in functional:
+                    self.functional = 'mPW1PW91'
+                else:
+                    self.functional = functional
 
             self.scfenergies.append(utils.convertor(self.float(line.split()[4]), "hartree", "eV"))
         # gmagoon 5/27/09: added scfenergies reading for PM3 case
@@ -1432,7 +1452,7 @@ class Gaussian(logfileparser.Logfile):
                 self.skip_lines(inputfile, ['xx','xy','xz','eigen'])
                 line = next(inputfile)
 
-        if "Dipole moment" in line:
+        if "Dipole moment (Debye)" in line:
             if not hasattr(self, "moments"):
                 self.moments = []
             reference = [0.0, 0.0, 0.0]
@@ -1443,6 +1463,15 @@ class Gaussian(logfileparser.Logfile):
             moments = list(map(float, [cols[1], cols[3], cols[5]]))
             self.moments.append(moments)
 
+        if "Dipole moment=" in line:
+            if not hasattr(self, "moments"):
+                self.moments = []
+            reference = [0.0, 0.0, 0.0]
+            self.moments.append(reference)
+
+            cols = line.split()
+            moments = list(map(float, [cols[2], cols[3], cols[4]]))
+            self.moments.append(moments)
 
 
 if __name__ == "__main__":
