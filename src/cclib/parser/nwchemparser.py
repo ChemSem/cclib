@@ -547,6 +547,11 @@ class NWChem(logfileparser.Logfile):
             self.theory = "HF"
         if "Total DFT energy" in line:
             self.theory = "DFT"
+        if "Nuclear repulsion energy" in line:
+            if not hasattr(self, "nnenergies"):
+                self.nnenergies = []
+            nnenergy = float(line.split()[-1])
+            self.nnenergies.append(utils.convertor(nnenergy, "hartree", "eV"))
         if "Total SCF energy" in line or "Total DFT energy" in line:
 
             # NWChem often does a line search during geometry optimization steps, reporting

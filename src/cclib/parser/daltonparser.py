@@ -828,6 +828,12 @@ class DALTON(logfileparser.Logfile):
             temp = line.split()
             self.scfenergies.append(utils.convertor(float(temp[-1]), "hartree", "eV"))
 
+        if "Nuclear repulsion" in line:
+            if not hasattr(self, "nnenergies"):
+                self.nnenergies = []
+            nnenergy = float(line.split()[-1])
+            self.nnenergies.append(utils.convertor(nnenergy, "hartree", "eV"))
+
         if "@   = MP2 second order energy" in line:
             self.theory = "MP2"
             energ = utils.convertor(float(line.split()[-1]), 'hartree', 'eV')
