@@ -257,7 +257,7 @@ class CSX(filewriter.Writer):
                 status='default status', \
                 category=1, \
                 visibility=0, \
-                tags=data.package, \
+                tag=data.package, \
                 key=1 )
         source1 = api.sourcePackageType(name=data.package, version=data.version)
         mp1.set_sourcePackage(source1)

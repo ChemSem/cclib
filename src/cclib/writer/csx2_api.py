@@ -795,7 +795,7 @@ class mpubType(GeneratedsSuper):
     """Data about a computational chemistry calculation"""
     subclass = None
     superclass = None
-    def __init__(self, title=None, abstract=None, publisher=None, author=None, sourcePackage=None, tags=None, status=None, visibility=None, category=None, key=None):
+    def __init__(self, title=None, abstract=None, publisher=None, author=None, sourcePackage=None, tag=None, status=None, visibility=None, category=None, key=None):
         self.original_tagname_ = None
         self.title = title
         self.abstract = abstract
@@ -805,7 +805,7 @@ class mpubType(GeneratedsSuper):
         else:
             self.author = author
         self.sourcePackage = sourcePackage
-        self.tags = tags
+        self.tag = tag
         self.status = status
         self.visibility = visibility
         self.category = category
@@ -834,8 +834,8 @@ class mpubType(GeneratedsSuper):
     def replace_author_at(self, index, value): self.author[index] = value
     def get_sourcePackage(self): return self.sourcePackage
     def set_sourcePackage(self, sourcePackage): self.sourcePackage = sourcePackage
-    def get_tags(self): return self.tags
-    def set_tags(self, tags): self.tags = tags
+    def get_tag(self): return self.tag
+    def set_tag(self, tag): self.tag = tag
     def get_status(self): return self.status
     def set_status(self, status): self.status = status
     def get_visibility(self): return self.visibility
@@ -851,7 +851,7 @@ class mpubType(GeneratedsSuper):
             self.publisher is not None or
             self.author or
             self.sourcePackage is not None or
-            self.tags is not None or
+            self.tag is not None or
             self.status is not None or
             self.visibility is not None or
             self.category is not None or
@@ -902,9 +902,9 @@ class mpubType(GeneratedsSuper):
             author_.export(outfile, level, namespace_, name_='author', pretty_print=pretty_print)
         if self.sourcePackage is not None:
             self.sourcePackage.export(outfile, level, namespace_, name_='sourcePackage', pretty_print=pretty_print)
-        if self.tags is not None:
+        if self.tag is not None:
             showIndent(outfile, level, pretty_print)
-            outfile.write('<%stags>%s</%stags>%s' % (namespace_, self.gds_encode(self.gds_format_string(quote_xml(self.tags), input_name='tags')), namespace_, eol_))
+            outfile.write('<%stag>%s</%stag>%s' % (namespace_, self.gds_encode(self.gds_format_string(quote_xml(self.tag), input_name='tag')), namespace_, eol_))
         if self.status is not None:
             showIndent(outfile, level, pretty_print)
             outfile.write('<%sstatus>%s</%sstatus>%s' % (namespace_, self.gds_encode(self.gds_format_string(quote_xml(self.status), input_name='status')), namespace_, eol_))
@@ -967,10 +967,10 @@ class mpubType(GeneratedsSuper):
             obj_.build(child_)
             self.sourcePackage = obj_
             obj_.original_tagname_ = 'sourcePackage'
-        elif nodeName_ == 'tags':
-            tags_ = child_.text
-            tags_ = self.gds_validate_string(tags_, node, 'tags')
-            self.tags = tags_
+        elif nodeName_ == 'tag':
+            tag_ = child_.text
+            tag_ = self.gds_validate_string(tag_, node, 'tag')
+            self.tag = tag_
         elif nodeName_ == 'status':
             status_ = child_.text
             status_ = self.gds_validate_string(status_, node, 'status')
