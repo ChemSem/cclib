@@ -1452,7 +1452,7 @@ class Gaussian(logfileparser.Logfile):
                 self.skip_lines(inputfile, ['xx','xy','xz','eigen'])
                 line = next(inputfile)
 
-        if "Dipole moment (Debye)" in line:
+        if "Dipole moment (Debye)" in line or "Dipole moment (field-independent" in line:
             if not hasattr(self, "moments"):
                 self.moments = []
             reference = [0.0, 0.0, 0.0]
