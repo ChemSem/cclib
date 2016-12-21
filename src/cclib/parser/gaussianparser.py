@@ -640,7 +640,7 @@ class Gaussian(logfileparser.Logfile):
         # Read the consecutive correlated energies
         # but append only the last one to ccenergies.
         # Only the highest level energy is appended - ex. CCSD(T), not CCSD.
-        if "DE(CORR)=" in line and "E(CORR)=" in line:
+        if "DE(CORR)=" in line or "DE(Corr)=" in line:
             self.ccenergy = self.float(line.split()[3])
         if line[1:10] == "T5(CCSD)=":
             line = next(inputfile)
