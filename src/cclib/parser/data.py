@@ -30,6 +30,7 @@ class ccData(object):
         atomspins -- atomic spin densities (dict of arrays[1])
         charge -- net charge of the system (integer)
         ccenergies -- molecular energies with Coupled-Cluster corrections (array[2], eV)
+        cienergies -- molecular energies with Configuration Interaction (array[2], eV)
         coreelectrons -- number of core electrons in atom pseudopotentials (array[1])
         enthalpy -- sum of electronic and thermal enthalpies (float, hartree/particle)
         entropy -- entropy (float, hartree/particle)
@@ -98,6 +99,7 @@ class ccData(object):
         "atomspins":      dict,
         "basisname":      str,
         "ccenergies":     numpy.ndarray,
+        "cienergies":     numpy.ndarray,
         "cfunctional":    str,
         "charge":         int,
         "coreelectrons":  numpy.ndarray,

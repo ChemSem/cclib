@@ -627,6 +627,13 @@ class Gaussian(logfileparser.Logfile):
             mp5energy = self.float(line.split("=")[2])
             self.mpenergies[-1].append(utils.convertor(mp5energy, "hartree", "eV"))
 
+        # Extract CID or CISD energies
+        if line[1:8] == "DE(CI)=":
+            if not hasattr(self, "cienergies"):
+                self.cienergies = []
+            cienergy = self.float(line.split()[3])
+            self.cienergies.append(utils.convertor(cienergy, "hartree", "eV"))
+
         # Total energies after Coupled Cluster corrections.
         # Second order MBPT energies (MP2) are also calculated for these runs,
         # but the output is the same as when parsing for mpenergies.
@@ -1472,6 +1479,11 @@ class Gaussian(logfileparser.Logfile):
             cols = line.split()
             moments = list(map(float, [cols[2], cols[3], cols[4]]))
             self.moments.append(moments)
+
+        if "RCID-FC" in line or "UCID-FC" in line:
+            self.theory = "CID"
+        if "RCISD-FC" in line or "UCISD-FC" in line:
+            self.theory = "CISD"
 
 
 if __name__ == "__main__":
