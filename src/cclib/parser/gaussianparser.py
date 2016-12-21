@@ -640,15 +640,15 @@ class Gaussian(logfileparser.Logfile):
         # Read the consecutive correlated energies
         # but append only the last one to ccenergies.
         # Only the highest level energy is appended - ex. CCSD(T), not CCSD.
-        if line[1:10] == "DE(Corr)=" and line[27:35] == "E(CORR)=":
-            self.theory = "CCSD"
+        if "DE(CORR)=" in line and "E(CORR)=" in line:
             self.ccenergy = self.float(line.split()[3])
         if line[1:10] == "T5(CCSD)=":
             line = next(inputfile)
             if line[1:9] == "CCSD(T)=":
                 self.theory = "CCSD-T"
                 self.ccenergy = self.float(line.split()[1])
-        if line[12:53] == "Population analysis using the SCF density":
+        if line[12:53] == "Population analysis using the SCF density" or \
+           line[12:56] == "Population analysis using the QCI/CC density":
             if hasattr(self, "ccenergy"):
                 if not hasattr(self, "ccenergies"):
                     self.ccenergies = []
@@ -1480,10 +1480,14 @@ class Gaussian(logfileparser.Logfile):
             moments = list(map(float, [cols[2], cols[3], cols[4]]))
             self.moments.append(moments)
 
-        if "RCID-FC" in line or "UCID-FC" in line:
+        if "RCID-" in line or "UCID-" in line:
             self.theory = "CID"
-        if "RCISD-FC" in line or "UCISD-FC" in line:
+        if "RCISD-" in line or "UCISD-" in line:
             self.theory = "CISD"
+        if "RCCSD-" in line or "UCCSD-" in line:
+            self.theory = "CCSD"
+        if "RQCISD-" in line or "UQCISD-" in line:
+            self.theory = "QCISD"
 
 
 if __name__ == "__main__":

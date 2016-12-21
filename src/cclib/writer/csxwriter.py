@@ -761,6 +761,29 @@ class CSX(filewriter.Writer):
                         if hasFreq:
                             cisd1.set_vibrationalAnalysis(vib1)
                         mdm1.set_cisd(cisd1)
+                    elif (calcType == 'QCISD'):
+                        qcisd1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                basisSet='bse:'+basisName)
+                        ene1 = api.energiesType(unit='u:ElectronVolt')
+                        ee_ene1 = api.energyType(type_='gc:totalPotential')
+                        ee_ene1.set_valueOf_(float(data.ccenergies[-1]))
+                        ce_ene1 = api.energyType(type_='gc:correlation')
+                        ce_ene1.set_valueOf_(float(data.ccenergies[-1])-float(molEE))
+                        nn_ene1 = api.energyType(type_='gc:nuclearRepulsion')
+                        nn_ene1.set_valueOf_(data.nnenergies[-1])
+                        ene1.add_energy(ee_ene1)
+                        ene1.add_energy(ce_ene1)
+                        ene1.add_energy(nn_ene1)
+                        qcisd1.set_energies(ene1)
+                        if hasOrb:
+                            qcisd1.set_waveFunction(wfn1)
+                        if hasProp:
+                            qcisd1.set_properties(prop1)
+                        if hasNMR:
+                            qcisd1.set_properties(prop2)
+                        if hasFreq:
+                            qcisd1.set_vibrationalAnalysis(vib1)
+                        mdm1.set_qcisd(qcisd1)
                     else:
                         print ('The current CSX does not support this method')
                     srs1.set_multipleDeterminant(mdm1)
