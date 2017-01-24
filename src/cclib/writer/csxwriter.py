@@ -453,7 +453,7 @@ class CSX(filewriter.Writer):
                             ene1.add_energy(ee_ene1)
                             ene1.add_energy(ce_ene1)
                             ccsd_t1.set_energies(ene1)
-                            mdm1.set_ccsd-t(ccsd_t1)
+                            mdm1.set_ccsd_t(ccsd_t1)
                         else:
                             print ('The current CSX does not support this method')
                         srs1.set_multipleDeterminant(mdm1)
@@ -499,7 +499,7 @@ class CSX(filewriter.Writer):
 
             #molCalculation section
             sd_wfn_method = ['HF', 'DFT', 'MP2', 'MP3', 'MP4', 'AM1', 'PM3', 'PM6']
-            md_wfn_method = ['CCD', 'CCSD', 'CCSD-T', 'CIS', 'CISD', 'FCI', 'QCISD', 'QCISD-T']
+            md_wfn_method = ['CCD', 'CCSD', 'CCSD-T', 'CIS', 'CISD', 'FCI', 'G2', 'QCISD', 'QCISD-T']
             mr_wfn_method = ['CASSCF', 'CASPT2', 'RASSCF', 'RASPT2', 'GVB', 'MCSCF', 'MRCC', 'MRCI']
             mc1 = api.mcalType(id='c1', inputsystem='s1')
             qm1 = api.qmCalcType()
@@ -714,7 +714,7 @@ class CSX(filewriter.Writer):
                             ccsd_t1.set_properties(prop2)
                         if hasFreq:
                             ccsd_t1.set_vibrationalAnalysis(vib1)
-                        mdm1.set_ccsd-t(ccsd_t1)
+                        mdm1.set_ccsd_t(ccsd_t1)
                     elif (calcType == 'CID'):
                         cid1 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
                                 basisSet='bse:'+basisName)
@@ -784,6 +784,26 @@ class CSX(filewriter.Writer):
                         if hasFreq:
                             qcisd1.set_vibrationalAnalysis(vib1)
                         mdm1.set_qcisd(qcisd1)
+                    elif (calcType == 'G2'):
+                        g21 = api.resultType(methodology='gc:normal',spinType='gc:'+molSpin, \
+                                basisSet='bse:'+basisName)
+                        ene1 = api.energiesType(unit='u:Hartree')
+                        ee_ene1 = api.energyType(type_='gc:Ethalpy')
+                        ee_ene1.set_valueOf_(float(data.enthalpy))
+                        ce_ene1 = api.energyType(type_='gc:FreeEnergy')
+                        ce_ene1.set_valueOf_(float(data.freeenergy))
+                        ene1.add_energy(ee_ene1)
+                        ene1.add_energy(ce_ene1)
+                        g21.set_energies(ene1)
+                        if hasOrb:
+                            g21.set_waveFunction(wfn1)
+                        if hasProp:
+                            g21.set_properties(prop1)
+                        if hasNMR:
+                            g21.set_properties(prop2)
+                        if hasFreq:
+                            g21.set_vibrationalAnalysis(vib1)
+                        mdm1.set_g2(g21)
                     else:
                         print ('The current CSX does not support this method')
                     srs1.set_multipleDeterminant(mdm1)
